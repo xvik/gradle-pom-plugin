@@ -1,0 +1,254 @@
+package ru.vyarus.gradle.plugin.pom
+/**
+ * @author Vyacheslav Rusakov 
+ * @since 06.11.2015
+ */
+class PomPluginKitTest extends AbstractKitTest {
+
+    def "Check pom modifications"() {
+        setup:
+        build("""
+            plugins {
+                id 'java'
+                id 'ru.vyarus.pom'
+            }
+
+            group 'ru.vyarus'
+            version 1.0
+            description 'sample description'
+
+            dependencies {
+                provided 'com.google.code.findbugs:annotations:3.0.0'
+                optional 'ru.vyarus:generics-resolver:2.0.0'
+                runtime 'ru.vyarus:guice-ext-annotations:1.1.1'
+                compile 'org.javassist:javassist:3.16.1-GA'
+            }
+
+            publishing {
+                publications {
+                    maven(MavenPublication) {
+                        from components.java
+                    }
+                }
+            }
+
+            pom {
+                developers {
+                    developer {
+                        id "dev"
+                        name "Dev Dev"
+                        email "dev@gmail.com"
+                    }
+                }
+            }
+
+            model {
+                tasks.generatePomFileForMavenPublication {
+                    destination = file("\$buildDir/generated-pom.xml")
+                }
+            }
+        """)
+
+        when: "run pom task"
+        run('generatePomFileForMavenPublication')
+
+        def pomFile = file("build/generated-pom.xml")
+        def pom = new XmlParser().parse(pomFile)
+        // for debug
+        println pomFile.getText()
+
+        then: "runtime dependency scope remain"
+        pom.dependencies.'*'.find { it.artifactId.text() == 'guice-ext-annotations' }.scope.text() == 'runtime'
+
+        then: "compile dependency scope corrected"
+        pom.dependencies.'*'.find { it.artifactId.text() == 'javassist' }.scope.text() == 'compile'
+
+        then: "provided dependency scope corrected"
+        pom.dependencies.'*'.find { it.artifactId.text() == 'annotations' }.scope.text() == 'provided'
+
+        then: "optional dependency scope corrected"
+        def dep = pom.dependencies.'*'.find { it.artifactId.text() == 'generics-resolver' }
+        dep.scope.text() == 'compile'
+        dep.optional.text() == 'true'
+
+        then: "pom modification applied"
+        def developer = pom.developers.developer
+        developer.id.text() == 'dev'
+        developer.name.text() == 'Dev Dev'
+        developer.email.text() == 'dev@gmail.com'
+
+        then: "defaults applied"
+        pom.name.text() != null
+        pom.description.text() == 'sample description'
+    }
+
+    def "Check pom defaults override"() {
+        setup:
+        build("""
+            plugins {
+                id 'java'
+                id 'ru.vyarus.pom'
+            }
+
+            group 'ru.vyarus'
+            version 1.0
+            description 'sample description'
+
+            publishing {
+                publications {
+                    maven(MavenPublication) {
+                        from components.java
+                    }
+                }
+            }
+
+            pom {
+                name "override"
+                description "override"
+            }
+
+            model {
+                tasks.generatePomFileForMavenPublication {
+                    destination = file("\$buildDir/generated-pom.xml")
+                }
+            }
+        """)
+
+        when: "run pom task"
+        run('generatePomFileForMavenPublication')
+
+        def pomFile = file("build/generated-pom.xml")
+        def pom = new XmlParser().parse(pomFile)
+        // for debug
+        println pomFile.getText()
+
+        then: "defaults should not be applied"
+        pom.name.text() == 'override'
+        pom.description.text() == 'override'
+    }
+
+    def "Check description not applied if not set"() {
+        setup:
+        build("""
+            plugins {
+                id 'java'
+                id 'ru.vyarus.pom'
+            }
+
+            group 'ru.vyarus'
+            version 1.0
+            // description 'sample description'  <-- description not set in project
+
+            publishing {
+                publications {
+                    maven(MavenPublication) {
+                        from components.java
+                    }
+                }
+            }
+
+            model {
+                tasks.generatePomFileForMavenPublication {
+                    destination = file("\$buildDir/generated-pom.xml")
+                }
+            }
+        """)
+
+        when: "run pom task"
+        run('generatePomFileForMavenPublication')
+
+        def pomFile = file("build/generated-pom.xml")
+        def pom = new XmlParser().parse(pomFile)
+        // for debug
+        println pomFile.getText()
+
+        then: "description tag not created"
+        !pom.description
+    }
+
+
+    def "Check multiple publications"() {
+        setup:
+        build("""
+            plugins {
+                id 'java'
+                id 'ru.vyarus.pom'
+            }
+
+            group 'ru.vyarus'
+            version 1.0
+
+            dependencies {
+                provided 'com.google.code.findbugs:annotations:3.0.0'
+                optional 'ru.vyarus:generics-resolver:2.0.0'
+                runtime 'ru.vyarus:guice-ext-annotations:1.1.1'
+                compile 'org.javassist:javassist:3.16.1-GA'
+            }
+
+            publishing {
+                publications {
+                    maven(MavenPublication) {
+                        from components.java
+                        pom.withXml {
+                            asNode().appendNode('name', 'first')
+                        }
+                    }
+
+                    maven2(MavenPublication) {
+                        from components.java
+                        pom.withXml {
+                            asNode().appendNode('name', 'second')
+                        }
+                    }
+                }
+            }
+
+            pom {
+                developers {
+                    developer {
+                        id "dev"
+                        name "Dev Dev"
+                        email "dev@gmail.com"
+                    }
+                }
+            }
+
+            model {
+                tasks.generatePomFileForMavenPublication {
+                    destination = file("\$buildDir/generated-pom.xml")
+                }
+                tasks.generatePomFileForMaven2Publication {
+                    destination = file("\$buildDir/generated-pom2.xml")
+                }
+            }
+        """)
+
+        when: "run pom task"
+        run('generatePomFileForMavenPublication')
+
+        def pomFile = file("build/generated-pom.xml")
+        def pom = new XmlParser().parse(pomFile)
+        def developer = pom.developers.developer
+        // for debug
+        println pomFile.getText()
+
+        then: "modifications applied"
+        pom.dependencies.'*'.find { it.artifactId.text() == 'javassist' }.scope.text() == 'compile'
+        developer.id.text() == 'dev'
+        pom.name.text() == 'first'
+
+        when: "run pom2 task"
+        run('generatePomFileForMaven2Publication')
+
+        pomFile = file("build/generated-pom2.xml")
+        pom = new XmlParser().parse(pomFile)
+        developer = pom.developers.developer
+        // for debug
+        println pomFile.getText()
+
+        then: "modifications applied"
+        pom.dependencies.'*'.find { it.artifactId.text() == 'javassist' }.scope.text() == 'compile'
+        developer.id.text() == 'dev'
+        pom.name.text() == 'second'
+    }
+}
