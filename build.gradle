@@ -48,7 +48,7 @@ task sourcesJar(type: Jar, dependsOn: classes, group: 'build') {
 }
 
 def pomConfig = {
-    name 'Gradle POM plugin'
+    name project.description
     url 'https://github.com/xvik/gradle-quality-plugin'
     licenses {
         license {
@@ -125,9 +125,9 @@ pluginBundle {
     tags = ['java', 'groovy', 'maven', 'pom']
 
     plugins {
-        qualityPlugin {
-            id = project.description
-            displayName = 'Gradle POM plugin'
+        pomPlugin {
+            id = 'ru.vyarus.pom'
+            displayName = project.description
         }
     }
 
