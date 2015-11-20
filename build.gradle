@@ -49,7 +49,7 @@ task sourcesJar(type: Jar, dependsOn: classes, group: 'build') {
 
 def pomConfig = {
     name project.description
-    url 'https://github.com/xvik/gradle-quality-plugin'
+    url 'https://github.com/xvik/gradle-pom-plugin'
     licenses {
         license {
             name 'The MIT License'
