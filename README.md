@@ -30,7 +30,7 @@ buildscript {
 apply plugin: 'ru.vyarus.pom'
 ```
 
-OR
+OR (waiting for approve)
 
 ```groovy
 plugins {
