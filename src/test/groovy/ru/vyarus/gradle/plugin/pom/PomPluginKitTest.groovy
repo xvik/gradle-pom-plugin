@@ -251,4 +251,49 @@ class PomPluginKitTest extends AbstractKitTest {
         developer.id.text() == 'dev'
         pom.name.text() == 'second'
     }
+
+    def "Check test dependencies removed"() {
+        setup:
+        build("""
+            plugins {
+                id 'java'
+                id 'ru.vyarus.pom'
+            }
+
+            group 'ru.vyarus'
+            version 1.0
+            description 'sample description'
+
+            dependencies {
+                testCompile 'com.google.code.findbugs:annotations:3.0.0'
+                testRuntime 'ru.vyarus:generics-resolver:2.0.0'
+            }
+
+            publishing {
+                publications {
+                    maven(MavenPublication) {
+                        from components.java
+                    }
+                }
+            }
+
+            model {
+                tasks.generatePomFileForMavenPublication {
+                    destination = file("\$buildDir/generated-pom.xml")
+                }
+            }
+        """)
+
+        when: "run pom task"
+        run('generatePomFileForMavenPublication')
+
+        def pomFile = file("build/generated-pom.xml")
+        def pom = new XmlParser().parse(pomFile)
+        // for debug
+        println pomFile.getText()
+
+        then: "test dependency remain"
+        !pom.dependencies.'*'.find { it.artifactId.text() == 'annotations' }
+        !pom.dependencies.'*'.find { it.artifactId.text() == 'generics-resolver' }
+    }
 }
