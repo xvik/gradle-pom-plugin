@@ -110,7 +110,7 @@ class PomPlugin implements Plugin<Project> {
     private void applyUserPom(Project project, Node pomXml) {
         PomExtension pomExt = project.convention.plugins.pom
         if (pomExt.config) {
-            pomXml.children().last() + pomExt.config
+            mergePom(pomXml, pomExt.config)
         }
         // apply defaults if required
         if (!pomXml.name) {
@@ -119,5 +119,49 @@ class PomPlugin implements Plugin<Project> {
         if (project.description && !pomXml.description) {
             pomXml.appendNode('description', project.description)
         }
+    }
+
+    /**
+     * Complex merge logic is required to avoid tag duplicates.
+     * For example, if scm.url tag specified manually  and in pom closure then
+     * after using simply '+' to append closure scm section will be duplicated.
+     * Correct behaviour is to override existing value and reuse section for other sub nodes.
+     *
+     * @param pomXml pom xml
+     * @param userPom user pom closure
+     */
+    private void mergePom(Node pomXml, Closure userPom) {
+        buildChildrenFromClosure(userPom).each {key, value ->
+            insertIntoPom(pomXml, key, value)
+        }
+    }
+
+    private Map<String, String> buildChildrenFromClosure(Closure c) {
+        NodeBuilder b = new NodeBuilder();
+        Node newNode = (Node) b.invokeMethod("dummyNode", c);
+        flattenNodes(newNode.children());
+    }
+
+    private Map<String, String> flattenNodes(List<Node> nodes) {
+        Map<String, String> res = [:]
+        for(Node node: nodes) {
+            if (node.children().isEmpty() || (node.children().size() == 1 && node.children()[0] instanceof String)) {
+                res[node.name()] = node.text()
+            } else {
+                flattenNodes(node.children()).each {key, value ->
+                    res["${node.name()}.$key"] = value
+                }
+            }
+        }
+        return res
+    }
+
+    private void insertIntoPom(Node pomXml, String name, String value) {
+        String[] nodes = name.split('\\.')
+        Node node = pomXml
+        nodes.each {
+            node = node[it] ? node[it][0] : node.appendNode(it)
+        }
+        node.value = value
     }
 }
