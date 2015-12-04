@@ -26,7 +26,7 @@ package ru.vyarus.gradle.plugin.pom
  * Only one pom configuration may be defined: if multiple pom configurations defined, only the last one will be
  * applied
  *
- * @author Vyacheslav Rusakov 
+ * @author Vyacheslav Rusakov
  * @since 04.11.2015
  */
 class PomExtension {

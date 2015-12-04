@@ -31,7 +31,7 @@ import org.gradle.api.publish.maven.plugins.MavenPublishPlugin
  * Plugin adds simplified pom configuration extension. Using pom closure in build new sections could be added
  * to resulted pom. If multiple maven publications configured, pom modification will be applied to all of them.
  *
- * @author Vyacheslav Rusakov 
+ * @author Vyacheslav Rusakov
  * @since 04.11.2015
  */
 class PomPlugin implements Plugin<Project> {
@@ -131,24 +131,25 @@ class PomPlugin implements Plugin<Project> {
      * @param userPom user pom closure
      */
     private void mergePom(Node pomXml, Closure userPom) {
-        buildChildrenFromClosure(userPom).each {key, value ->
+        buildChildrenFromClosure(userPom).each { key, value ->
             insertIntoPom(pomXml, key, value)
         }
     }
 
     private Map<String, String> buildChildrenFromClosure(Closure c) {
-        NodeBuilder b = new NodeBuilder();
-        Node newNode = (Node) b.invokeMethod("dummyNode", c);
-        flattenNodes(newNode.children());
+        NodeBuilder b = new NodeBuilder()
+        Node newNode = (Node) b.invokeMethod('dummyNode', c)
+        flattenNodes(newNode.children())
     }
 
+    @SuppressWarnings('Instanceof')
     private Map<String, String> flattenNodes(List<Node> nodes) {
         Map<String, String> res = [:]
-        for(Node node: nodes) {
+        for (Node node : nodes) {
             if (node.children().isEmpty() || (node.children().size() == 1 && node.children()[0] instanceof String)) {
                 res[node.name()] = node.text()
             } else {
-                flattenNodes(node.children()).each {key, value ->
+                flattenNodes(node.children()).each { key, value ->
                     res["${node.name()}.$key"] = value
                 }
             }
