@@ -14,9 +14,12 @@ Features:
 
 ### Setup
 
-Releases are published to [bintray jcenter](https://bintray.com/bintray/jcenter) and [gradle plugins portal](https://plugins.gradle.org).
+Releases are published to [bintray jcenter](https://bintray.com/vyarus/xvik/gradle-pom-plugin/), 
+[maven central](https://maven-badges.herokuapp.com/maven-central/ru.vyarus/gradle-pom-plugin) and 
+[gradle plugins portal](https://plugins.gradle.org/plugin/ru.vyarus.pom).
 
 [![JCenter](https://img.shields.io/bintray/v/vyarus/xvik/gradle-pom-plugin.svg?label=jcenter)](https://bintray.com/vyarus/xvik/gradle-pom-plugin/_latestVersion)
+[![Maven Central](https://img.shields.io/maven-central/v/ru.vyarus/gradle-pom-plugin.svg)](https://maven-badges.herokuapp.com/maven-central/ru.vyarus/gradle-pom-plugin)
 
 ```groovy
 buildscript {
@@ -24,17 +27,17 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath 'ru.vyarus:gradle-pom-plugin:1.0.0'
+        classpath 'ru.vyarus:gradle-pom-plugin:1.0.1'
     }
 }
 apply plugin: 'ru.vyarus.pom'
 ```
 
-OR (waiting for approve)
+OR
 
 ```groovy
 plugins {
-    id 'ru.vyarus.pom' version '1.0.0'
+    id 'ru.vyarus.pom' version '1.0.1'
 }
 ```
 
@@ -136,6 +139,9 @@ pom {
 
 Closure doesn't restrict structure: any tags may be used. 
 If `name` and `description` not specified, they will be applied implicitly from `project.name` and `project.description`.
+
+If pom already have some tags (e.g. set manually with withXml or by some plugin), plugin will override values and properly merge pom.
+No duplicate tags will be created.
 
 Only one `pom` closure may be defined: next pom closure completely override previous one.
 If [multiple publications](https://docs.gradle.org/current/userguide/publishing_maven.html#N17EB8) declared, 
