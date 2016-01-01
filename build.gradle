@@ -10,9 +10,6 @@ plugins {
     id "com.github.ben-manes.versions" version "0.11.3"
 }
 
-group = 'ru.vyarus'
-description = 'Gradle POM plugin'
-
 sourceCompatibility = 1.6
 targetCompatibility = 1.6
 
@@ -40,6 +37,9 @@ dependencies {
         exclude module: 'groovy-all'
     }
 }
+
+group = 'ru.vyarus'
+description = 'Gradle POM plugin'
 
 github {
     user 'xvik'

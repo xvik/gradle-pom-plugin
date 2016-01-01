@@ -1,4 +1,5 @@
 package ru.vyarus.gradle.plugin.pom
+
 /**
  * @author Vyacheslav Rusakov 
  * @since 06.11.2015
