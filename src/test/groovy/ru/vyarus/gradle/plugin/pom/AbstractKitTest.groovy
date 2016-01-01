@@ -10,12 +10,20 @@ import spock.lang.Specification
  * @author Vyacheslav Rusakov 
  * @since 18.11.2015
  */
-abstract class AbstractKitTest extends Specification{
+abstract class AbstractKitTest extends Specification {
 
-    @Rule final TemporaryFolder testProjectDir = new TemporaryFolder()
+    @Rule
+    final TemporaryFolder testProjectDir = new TemporaryFolder()
     File buildFile
 
+    List<File> pluginClasspath
+
     def setup() {
+        def pluginClasspathResource = getClass().classLoader.findResource("plugin-classpath.txt")
+        if (pluginClasspathResource == null) {
+            throw new IllegalStateException("Did not find plugin classpath resource, run `testClasses` build task.")
+        }
+        pluginClasspath = pluginClasspathResource.readLines().collect { new File(it) }
         buildFile = testProjectDir.newFile('build.gradle')
     }
 
@@ -41,14 +49,23 @@ abstract class AbstractKitTest extends Specification{
         GradleRunner.create()
                 .withProjectDir(testProjectDir.root)
                 .withArguments((commands + ['--stacktrace']) as String[])
-                .withPluginClasspath([new File('build/classes/main'), new File('build/resources/main')])
+                .withPluginClasspath(pluginClasspath)
+                .forwardOutput()
     }
 
     BuildResult run(String... commands) {
-        BuildResult result = gradle(commands).build()
-        // for debug
-        println result.getStandardOutput()
-        println result.getStandardError()
-        return result
+        return gradle(commands).build()
+    }
+
+    BuildResult runFailed(String... commands) {
+        return gradle(commands).buildAndFail()
+    }
+
+    BuildResult runVer(String gradleVersion, String... commands) {
+        return gradle(commands).withGradleVersion(gradleVersion).build()
+    }
+
+    BuildResult runFailedVer(String gradleVersion, String... commands) {
+        return gradle(commands).withGradleVersion(gradleVersion).buildAndFail()
     }
 }
