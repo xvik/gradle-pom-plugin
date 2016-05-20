@@ -12,6 +12,15 @@ Features:
 * Fix dependencies scopes in generated pom (from default runtime)
 * Add `pom` configuration closure to avoid maven-publish's withXml.
 
+If you develop java or groovy library you may look to [gradle-java-lib-plugin](https://github.com/xvik/gradle-java-lib-plugin)
+which already includes `pom` plugin and configures maven publication for you.
+
+If your project is hosted on github you may look to [gradle-github-info](https://github.com/xvik/gradle-github-info-plugin) 
+which fills some pom sections for you automatically. 
+
+Also, you can use [java library generator](https://github.com/xvik/generator-lib-java) to setup new project with
+all plugins configured.
+
 ### Setup
 
 Releases are published to [bintray jcenter](https://bintray.com/vyarus/xvik/gradle-pom-plugin/), 
@@ -27,7 +36,7 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath 'ru.vyarus:gradle-pom-plugin:1.0.1'
+        classpath 'ru.vyarus:gradle-pom-plugin:1.0.2'
     }
 }
 apply plugin: 'ru.vyarus.pom'
@@ -37,7 +46,7 @@ OR
 
 ```groovy
 plugins {
-    id 'ru.vyarus.pom' version '1.0.1'
+    id 'ru.vyarus.pom' version '1.0.2'
 }
 ```
 
@@ -105,6 +114,23 @@ In resulted pom will be:
 ```
 
 Note: by default, maven-publish sets runtime scope for all dependencies, but plugin fixes that.
+
+##### Provided and optional configurations
+
+Plugin registers `provided` and `optional` configurations and makes `compile` configuration extend them.
+So, for gradle, `provided` and `optional` dependencies will work the same as `compile`.
+
+Only during pom generation plugin will detect dependencies from `provided` or `optional` and mark them accordingly 
+in generated pom.
+
+If you want to include some other configuration dependencies as provided in pom, you can do:
+
+```groovy
+configurations.provided.extendsFrom configurations.myConf
+```
+
+But, don't forget that `compile` already extends `provided`, so your configuration will be transitively included 
+ into compile. Anyway, in resulted pom all dependencies from `myConf` will have provided scope.
 
 #### Pom configuration
 

@@ -1,3 +1,4 @@
+### 1.0.2 (2016-05-20)
 * Pom dependencies scopes update fixed:
     - use both group and artifact for matching
     - avoid marking as provided or optional transitive dependencies which also directly declared in compile
