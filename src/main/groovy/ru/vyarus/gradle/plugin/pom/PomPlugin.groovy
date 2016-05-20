@@ -4,6 +4,8 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.ConfigurationContainer
+import org.gradle.api.artifacts.Dependency
+import org.gradle.api.artifacts.DependencySet
 import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.publish.PublishingExtension
 import org.gradle.api.publish.maven.MavenPublication
@@ -78,31 +80,46 @@ class PomPlugin implements Plugin<Project> {
         }
     }
 
+    /**
+     * Gradle sets runtime scope for all dependencies (actually because it includes everything
+     * from runtime configuration) and this has to be fixed.
+     * <p>
+     * To avoid overriding scope for dependencies directly specified as compile, but also present as
+     * transitives in provided or optional, all direct compile dependencies are excluded when looking
+     * for optional and provided.
+     * <p>
+     * NOTE this does not cover cases when compile extends other configurations, but such cases should be rare.
+     *
+     * @param project project instance
+     * @param pomXml pom xml
+     */
     private void fixPomDependenciesScopes(Project project, Node pomXml) {
-        // gradle sets runtime scope for all dependencies.. fixing
-        pomXml.dependencies.dependency.findAll {
-            it.scope.text() == JavaPlugin.RUNTIME_CONFIGURATION_NAME &&
-                    project.configurations.compile.allDependencies.find { dep ->
-                        dep.name == it.artifactId.text()
-                    }
-        }.each {
+        Closure correctDependencies = { Closure precondition, DependencySet deps, Closure action ->
+            pomXml.dependencies.dependency.findAll {
+                precondition.call(it) &&
+                        deps.find { Dependency dep ->
+                            dep.group == it.groupId.text() && dep.name == it.artifactId.text()
+                        }
+            }.each(action)
+        }
+
+        // COMPILE
+        Configuration compile = project.configurations.compile
+        correctDependencies({ it.scope.text() == JavaPlugin.RUNTIME_CONFIGURATION_NAME },
+                compile.allDependencies) {
             it.scope*.value = JavaPlugin.COMPILE_CONFIGURATION_NAME
         }
 
-        pomXml.dependencies.dependency.findAll {
-            project.configurations.optional.allDependencies.find { dep ->
-                dep.name == it.artifactId.text()
-            }
-        }.each {
+        // OPTIONAL
+        correctDependencies({ true },
+                project.configurations.optional.allDependencies - (compile.dependencies) as DependencySet) {
             it.scope*.value = JavaPlugin.COMPILE_CONFIGURATION_NAME
             it.appendNode(OPTIONAL, 'true')
         }
 
-        pomXml.dependencies.dependency.findAll {
-            project.configurations.provided.allDependencies.find { dep ->
-                dep.name == it.artifactId.text()
-            }
-        }.each {
+        // PROVIDED
+        correctDependencies({ true },
+                project.configurations.provided.allDependencies - (compile.dependencies) as DependencySet) {
             it.scope*.value = PROVIDED
         }
     }
