@@ -1,3 +1,5 @@
+* Fix repeated tags render like developers (#1)
+
 ### 1.0.2 (2016-05-20)
 * Pom dependencies scopes update fixed:
     - use both group and artifact for matching
