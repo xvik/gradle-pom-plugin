@@ -36,7 +36,7 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath 'ru.vyarus:gradle-pom-plugin:1.0.2'
+        classpath 'ru.vyarus:gradle-pom-plugin:1.0.3'
     }
 }
 apply plugin: 'ru.vyarus.pom'
@@ -46,7 +46,7 @@ OR
 
 ```groovy
 plugins {
-    id 'ru.vyarus.pom' version '1.0.2'
+    id 'ru.vyarus.pom' version '1.0.3'
 }
 ```
 
