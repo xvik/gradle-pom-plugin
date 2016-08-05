@@ -34,6 +34,8 @@ final class XmlMerger {
      * @param userPom user pom closure
      */
     static void mergePom(Node pomXml, Closure userPom) {
+        // required for proper properties tag rendering
+        userPom.resolveStrategy = Closure.DELEGATE_FIRST
         Node newNode = (Node) new NodeBuilder().invokeMethod('dummyNode', userPom)
         applyIds(newNode, '1')
         merge(pomXml, newNode.children())
@@ -145,6 +147,6 @@ final class XmlMerger {
      */
     @SuppressWarnings('Instanceof')
     private static boolean isLeaf(Node node) {
-        return node.children().empty || node.children()[0] instanceof String
+        return node.children().empty || !(node.children()[0] instanceof Node)
     }
 }

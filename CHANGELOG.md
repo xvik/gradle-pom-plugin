@@ -1,3 +1,6 @@
+* Fix properties tag in pom closure
+* Fix non string values support in pom closure
+
 ### 1.0.3 (2016-07-29)
 * Fix repeated tags render like developers (#1)
 
