@@ -5,14 +5,18 @@ package ru.vyarus.gradle.plugin.pom.xml
  * If full node path exists, but with different value then value simply overridden. If path is partially exists,
  * then required nodes will be added. Generally its a merge process in most common sense.
  * <p>
- *  Current downside is semantic isn't tracked. For example, if pom contains developer definition and user closure
- *  also contains developer then values of existing developer would be simply overridden and not updated tags will
- *  remain (for example, id, name email were in pom and closure sets only name and email.. id will remain in merged
- *  pom, which is ofc not correct. Assuming pretty similar merge situations to happen.
- *  <p>
- *  In order to prevent same path blocks override (e.g. multiple developers), each node in user closure has
- *  assigned unique id. When existing node in original tree gets updated, then child node id assigned to original node.
- *  Other nodes with the same path will not reuse the same tag because of assigned id.
+ * Current downside is semantic isn't tracked. For example, if pom contains developer definition and user closure
+ * also contains developer then values of existing developer would be simply overridden and not updated tags will
+ * remain (for example, id, name email were in pom and closure sets only name and email.. id will remain in merged
+ * pom, which is ofc not correct. Assuming pretty similar merge situations to happen.
+ * <p>
+ * In order to prevent same path blocks override (e.g. multiple developers), each node in user closure has
+ * assigned unique id. When existing node in original tree gets updated, then child node id assigned to original node.
+ * Other nodes with the same path will not reuse the same tag because of assigned id.
+ * <p>
+ * In cases when tag name in pom closure clash with gradle project method name, '_' prefix could be used.
+ * For example, 'relativePath' can't be used as method with the same name present in project, so use '_relativePath'
+ * instead.
  *
  * @author Vyacheslav Rusakov
  * @since 28.07.2016
@@ -37,7 +41,7 @@ final class XmlMerger {
         // required for proper properties tag rendering
         userPom.resolveStrategy = Closure.DELEGATE_FIRST
         Node newNode = (Node) new NodeBuilder().invokeMethod('dummyNode', userPom)
-        applyIds(newNode, '1')
+        prepareTree(newNode, '1')
         merge(pomXml, newNode.children())
         cleanIds(pomXml)
     }
@@ -115,15 +119,22 @@ final class XmlMerger {
 
     /**
      * Apply unique ids for all nodes.
+     * Remove '_' prefix from nodes (workaround for clashes with method names).
      *
      * @param root current node
      * @param topId id to apply
      */
-    private static void applyIds(Node root, String topId) {
+    private static void prepareTree(Node root, String topId) {
         root.attributes().put(NID_ATTR, topId)
+        String name = root.name()
+        if (name.startsWith('_')) {
+            Node replace = new Node(null, name[1..-1])
+            replace.setValue(root.value())
+            root.replaceNode(replace)
+        }
         int pos = 0
         if (!isLeaf(root)) {
-            root.children().each { applyIds(it, "${topId}_${++pos}") }
+            root.children().each { prepareTree(it, "${topId}_${++pos}") }
         }
     }
 

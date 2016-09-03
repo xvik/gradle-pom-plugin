@@ -504,8 +504,11 @@ class PomSectionsTest extends AbstractKitTest {
     </profile>
   </profiles>
 </project>
-""".replaceAll("\r", "")  == pomFile.getText().replaceAll(testProjectDir.getRoot().name,"junit4041206865739771722")
-
+""".replaceAll("\r", "") == pomFile.getText()
+                .replaceAll(getTestProjectDir().root.canonicalPath.replaceAll("\\\\", "\\\\\\\\"), "/tmp/junit4041206865739771722")
+                .replaceAll("\\\\", "/")
+                .replaceAll(testProjectDir.getRoot().name, "junit4041206865739771722")
+                .replaceAll("\r", "")
     }
 
 }
