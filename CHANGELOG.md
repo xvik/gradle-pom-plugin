@@ -1,3 +1,4 @@
+### 1.1.0 (2016-09-04)
 * Fix properties tag in pom closure
 * Fix non string values support in pom closure
 * Add workaround for tag name clashing with project method names: prefix '_' (prefix removed on xml merging)
