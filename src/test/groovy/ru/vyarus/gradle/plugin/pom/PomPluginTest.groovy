@@ -3,9 +3,6 @@ package ru.vyarus.gradle.plugin.pom
 import org.gradle.api.Project
 import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.publish.maven.plugins.MavenPublishPlugin
-import org.gradle.testfixtures.ProjectBuilder
-import spock.lang.Specification
-
 
 /**
  * @author Vyacheslav Rusakov 
@@ -48,7 +45,7 @@ class PomPluginTest extends AbstractTest {
 
         then: "extension container registered"
         project.convention.plugins.pom
-        project.convention.plugins.pom instanceof PomExtension
+        project.convention.plugins.pom instanceof PomConvention
 
         then: "maven publish plugin activated"
         project.plugins.findPlugin(MavenPublishPlugin)
@@ -70,7 +67,7 @@ class PomPluginTest extends AbstractTest {
 
         then: "extension container registered"
         project.convention.plugins.pom
-        project.convention.plugins.pom instanceof PomExtension
+        project.convention.plugins.pom instanceof PomConvention
 
         then: "maven publish plugin activated"
         project.plugins.findPlugin(MavenPublishPlugin)

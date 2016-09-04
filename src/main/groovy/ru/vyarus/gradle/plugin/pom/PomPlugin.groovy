@@ -47,7 +47,7 @@ class PomPlugin implements Plugin<Project> {
         // activated only when java plugin is enabled
         project.plugins.withType(JavaPlugin) {
             // extensions mechanism not used because we need free closure for pom xml modification
-            project.convention.plugins.pom = new PomExtension()
+            project.convention.plugins.pom = new PomConvention()
 
             project.plugins.apply(MavenPublishPlugin)
 
@@ -126,10 +126,11 @@ class PomPlugin implements Plugin<Project> {
     }
 
     private void applyUserPom(Project project, Node pomXml) {
-        PomExtension pomExt = project.convention.plugins.pom
+        PomConvention pomExt = project.convention.plugins.pom
         if (pomExt.config) {
             XmlMerger.mergePom(pomXml, pomExt.config)
         }
+        pomExt.xmlModifier?.call(pomXml)
         // apply defaults if required
         if (!pomXml.name) {
             pomXml.appendNode('name', project.name)

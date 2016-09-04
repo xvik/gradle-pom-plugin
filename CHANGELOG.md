@@ -1,6 +1,7 @@
 * Fix properties tag in pom closure
 * Fix non string values support in pom closure
 * Add workaround for tag name clashing with project method names: prefix '_' (prefix removed on xml merging)
+* Add manual xml modification closure: withPomXml {} (the same as maven-publish withXml {}, but with Node passed as parameter)
 
 ### 1.0.3 (2016-07-29)
 * Fix repeated tags render like developers (#1)
