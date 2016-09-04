@@ -1,5 +1,7 @@
 package ru.vyarus.gradle.plugin.pom
 
+import groovy.transform.CompileStatic
+
 /**
  * {@link PomPlugin} extension container. Not used as extension (project.extensions), but as convention
  * (project.conventions) because actual closure is structure free may define any pom sections (free xml).
@@ -38,6 +40,7 @@ package ru.vyarus.gradle.plugin.pom
  * @author Vyacheslav Rusakov
  * @since 04.11.2015
  */
+@CompileStatic
 class PomConvention {
     Closure config
     Closure xmlModifier

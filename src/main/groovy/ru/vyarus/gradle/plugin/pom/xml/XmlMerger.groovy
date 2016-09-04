@@ -1,5 +1,7 @@
 package ru.vyarus.gradle.plugin.pom.xml
 
+import groovy.transform.CompileStatic
+
 /**
  * Xml merging utility. For each node in custom xml searches existing path in original xml.
  * If full node path exists, but with different value then value simply overridden. If path is partially exists,
@@ -21,6 +23,7 @@ package ru.vyarus.gradle.plugin.pom.xml
  * @author Vyacheslav Rusakov
  * @since 28.07.2016
  */
+@CompileStatic
 final class XmlMerger {
 
     /**
@@ -68,7 +71,7 @@ final class XmlMerger {
      */
     private static void mergeChild(Node root, Node child) {
         // check if parent xml contains child tag
-        Node target = findPath(root[child.name()], child)
+        Node target = findPath(root.get(child.name() as String) as NodeList, child)
         if (target) {
             if (isLeaf(child)) {
                 // replacing current node value
@@ -114,7 +117,7 @@ final class XmlMerger {
     private static Node findPath(NodeList list, Node child) {
         String childID = nid(child)
         // look for matching id or any node without id
-        list.find { childID == nid(it) } ?: list.find { !nid(it) }
+        (list.find { childID == nid(it as Node) } ?: list.find { !nid(it as Node) }) as Node
     }
 
     /**
@@ -134,7 +137,7 @@ final class XmlMerger {
         }
         int pos = 0
         if (!isLeaf(root)) {
-            root.children().each { prepareTree(it, "${topId}_${++pos}") }
+            root.children().each { prepareTree(it as Node, "${topId}_${++pos}") }
         }
     }
 
@@ -147,7 +150,7 @@ final class XmlMerger {
         node.attributes().remove(NID_ATTR)
         if (!isLeaf(node)) {
             node.children().each {
-                cleanIds(it)
+                cleanIds(it as Node)
             }
         }
     }
