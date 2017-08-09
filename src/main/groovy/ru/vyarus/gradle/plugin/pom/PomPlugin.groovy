@@ -42,6 +42,8 @@ import ru.vyarus.gradle.plugin.pom.xml.XmlMerger
 @CompileStatic(TypeCheckingMode.SKIP)
 class PomPlugin implements Plugin<Project> {
 
+    private static final String COMPILE = 'compile'
+    private static final String RUNTIME = 'runtime'
     private static final String OPTIONAL = 'optional'
     private static final String PROVIDED = 'provided'
 
@@ -85,8 +87,7 @@ class PomPlugin implements Plugin<Project> {
     }
 
     /**
-     * Gradle sets runtime scope for all dependencies (actually because it includes everything
-     * from runtime configuration) and this has to be fixed.
+     * Gradle sets compile scope for all dependencies and this has to be fixed.
      * <p>
      * To avoid overriding scope for dependencies directly specified as compile, but also present as
      * transitives in provided or optional, all direct compile dependencies are excluded when looking
@@ -98,31 +99,34 @@ class PomPlugin implements Plugin<Project> {
      * @param pomXml pom xml
      */
     private void fixPomDependenciesScopes(Project project, Node pomXml) {
-        Closure correctDependencies = { Closure precondition, DependencySet deps, Closure action ->
+        Closure correctDependencies = { DependencySet deps, Closure action ->
             pomXml.dependencies.dependency.findAll {
-                precondition.call(it) &&
-                        deps.find { Dependency dep ->
-                            dep.group == it.groupId.text() && dep.name == it.artifactId.text()
-                        }
+                deps.find { Dependency dep ->
+                    dep.group == it.groupId.text() && dep.name == it.artifactId.text()
+                }
             }.each(action)
+        }
+
+        // RUNTIME
+        correctDependencies(project.configurations.runtime.allDependencies) {
+            it.scope*.value = RUNTIME
         }
 
         // COMPILE
         Configuration compile = project.configurations.compile
-        correctDependencies({ it.scope.text() == JavaPlugin.RUNTIME_CONFIGURATION_NAME },
-                compile.allDependencies) {
-            it.scope*.value = JavaPlugin.COMPILE_CONFIGURATION_NAME
+        correctDependencies(compile.allDependencies) {
+            it.scope*.value = COMPILE
         }
 
         // OPTIONAL
-        correctDependencies({ true },
+        correctDependencies(
                 project.configurations.optional.allDependencies - (compile.dependencies) as DependencySet) {
-            it.scope*.value = JavaPlugin.COMPILE_CONFIGURATION_NAME
+            it.scope*.value = COMPILE
             it.appendNode(OPTIONAL, 'true')
         }
 
         // PROVIDED
-        correctDependencies({ true },
+        correctDependencies(
                 project.configurations.provided.allDependencies - (compile.dependencies) as DependencySet) {
             it.scope*.value = PROVIDED
         }

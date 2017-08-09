@@ -1,3 +1,5 @@
+* Fix gradle 4 compatibility: correct runtime dependencies scope 
+
 ### 1.1.0 (2016-09-04)
 * Fix properties tag in pom closure
 * Fix non string values support in pom closure
