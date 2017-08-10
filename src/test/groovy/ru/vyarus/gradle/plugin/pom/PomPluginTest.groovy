@@ -53,7 +53,7 @@ class PomPluginTest extends AbstractTest {
 
     def "Check configurations applied for groovy"() {
 
-        when: "java plugin active"
+        when: "groovy plugin active"
         Project project = project {
             apply plugin: "groovy"
             apply plugin: "ru.vyarus.pom"
@@ -64,6 +64,26 @@ class PomPluginTest extends AbstractTest {
         project.configurations.findByName("optional")
         project.configurations.findByName(JavaPlugin.COMPILE_CONFIGURATION_NAME).extendsFrom
                 .collect{it.name} == ["provided", "optional"]
+
+        then: "extension container registered"
+        project.convention.plugins.pom
+        project.convention.plugins.pom instanceof PomConvention
+
+        then: "maven publish plugin activated"
+        project.plugins.findPlugin(MavenPublishPlugin)
+    }
+
+    def "Check configurations not applied for java-library"() {
+
+        when: "java-library plugin active"
+        Project project = project {
+            apply plugin: "java-library"
+            apply plugin: "ru.vyarus.pom"
+        }
+
+        then: "configurations not registered"
+        !project.configurations.findByName("provided")
+        !project.configurations.findByName("optional")
 
         then: "extension container registered"
         project.convention.plugins.pom

@@ -18,11 +18,14 @@ class PomPluginKitTest extends AbstractKitTest {
             version 1.0
             description 'sample description'
 
-            dependencies {
+            dependencies {                
                 provided 'com.google.code.findbugs:annotations:3.0.0'
                 optional 'ru.vyarus:generics-resolver:2.0.0'
                 runtime 'ru.vyarus:guice-ext-annotations:1.1.1'
                 compile 'org.javassist:javassist:3.16.1-GA'
+                
+                compileOnly 'ru.vyarus:gradle-pom-plugin:1.0.0'
+                runtimeOnly 'ru.vyarus:gradle-quality-plugin:2.0.0'
             }
 
             publishing {
@@ -58,7 +61,7 @@ class PomPluginKitTest extends AbstractKitTest {
         // for debug
         println pomFile.getText()
 
-        then: "runtime dependency scope remain"
+        then: "runtime dependency scope corrected"
         pom.dependencies.'*'.find { it.artifactId.text() == 'guice-ext-annotations' }.scope.text() == 'runtime'
 
         then: "compile dependency scope corrected"
@@ -71,6 +74,12 @@ class PomPluginKitTest extends AbstractKitTest {
         def dep = pom.dependencies.'*'.find { it.artifactId.text() == 'generics-resolver' }
         dep.scope.text() == 'compile'
         dep.optional.text() == 'true'
+
+        then: "compileOnly dependencies are removed from pom"
+        pom.dependencies.'*'.find { it.artifactId.text() == 'gradle-pom-plugin' } == null
+
+        then: "runtimeOnly dependency scope corrected"
+        pom.dependencies.'*'.find { it.artifactId.text() == 'gradle-quality-plugin' }.scope.text() == 'runtime'
 
         then: "pom modification applied"
         def developer = pom.developers.developer

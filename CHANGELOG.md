@@ -1,4 +1,7 @@
 * Fix gradle 4 compatibility: correct runtime dependencies scope 
+* Support java-library plugin: 
+    - do not register extra configurations (provided, optional) if java-library registered
+    - change scope of implementation dependencies to compile in the generated pom
 
 ### 1.1.0 (2016-09-04)
 * Fix properties tag in pom closure

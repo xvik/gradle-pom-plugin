@@ -15,11 +15,11 @@ import org.gradle.api.publish.maven.plugins.MavenPublishPlugin
 import ru.vyarus.gradle.plugin.pom.xml.XmlMerger
 
 /**
- * Pom plugin "fixes" maven-publish plugin pom generation.
+ * Pom plugin "fixes" maven-publish plugin pom generation: set correct scopes for dependencies.
  * <p>
- * Plugin must be applied after java or groovy plugin.
+ * Plugin must be applied after java, java-library or groovy plugin.
  * <p>
- * Applies new configurations:
+ * If java plugin used (and NOT java-library) applies new configurations:
  * <ul>
  *      <li>provided</li>
  *      <li>optional</li>
@@ -47,6 +47,8 @@ class PomPlugin implements Plugin<Project> {
     private static final String OPTIONAL = 'optional'
     private static final String PROVIDED = 'provided'
 
+    private static final String JAVA_LIB_PLUGIN = 'java-library'
+
     @Override
     void apply(Project project) {
         // activated only when java plugin is enabled
@@ -56,20 +58,31 @@ class PomPlugin implements Plugin<Project> {
 
             project.plugins.apply(MavenPublishPlugin)
 
-            addConfigurations(project)
+            addConfigurationsIfRequired(project)
             activatePomModifications(project)
         }
     }
 
-    private void addConfigurations(Project project) {
-        ConfigurationContainer configurations = project.configurations
-        Configuration provided = configurations.create(PROVIDED)
-        provided.setDescription('Provided works the same as compile configuration and only affects resulted pom')
+    /**
+     * Optional and provided configurations must be applied only if java plugin used (for legacy reasons).
+     * For java-library plugin extra configurations are not required: optional is never user and compileOnly
+     * could be used instead of provided (compileOnly dependencies are not present in pom).
+     * <p>
+     * IMPORTANT: java-library plugin must be registered BEFORE, otherwise it would not be detected
+     *
+     * @param project project
+     */
+    private void addConfigurationsIfRequired(Project project) {
+        if (project.plugins.findPlugin(JAVA_LIB_PLUGIN) == null) {
+            ConfigurationContainer configurations = project.configurations
+            Configuration provided = configurations.create(PROVIDED)
+            provided.setDescription('Provided works the same as compile configuration and only affects resulted pom')
 
-        Configuration optional = configurations.create(OPTIONAL)
-        optional.setDescription('Optional works the same as compile configuration and only affects resulted pom')
+            Configuration optional = configurations.create(OPTIONAL)
+            optional.setDescription('Optional works the same as compile configuration and only affects resulted pom')
 
-        configurations.getByName(JavaPlugin.COMPILE_CONFIGURATION_NAME).extendsFrom(provided, optional)
+            configurations.getByName(JavaPlugin.COMPILE_CONFIGURATION_NAME).extendsFrom(provided, optional)
+        }
     }
 
     private void activatePomModifications(Project project) {
@@ -99,6 +112,7 @@ class PomPlugin implements Plugin<Project> {
      * @param pomXml pom xml
      */
     private void fixPomDependenciesScopes(Project project, Node pomXml) {
+
         Closure correctDependencies = { DependencySet deps, Closure action ->
             pomXml.dependencies.dependency.findAll {
                 deps.find { Dependency dep ->
@@ -107,28 +121,36 @@ class PomPlugin implements Plugin<Project> {
             }.each(action)
         }
 
-        // RUNTIME
-        correctDependencies(project.configurations.runtime.allDependencies) {
-            it.scope*.value = RUNTIME
-        }
+        boolean javaLibrary = project.plugins.findPlugin(JAVA_LIB_PLUGIN) != null
+        if (javaLibrary) {
+            // IMPLEMENTATION (must be compile in pom instead of runtime)
+            correctDependencies(project.configurations.implementation.allDependencies) {
+                it.scope*.value = COMPILE
+            }
+        } else {
+            // RUNTIME
+            correctDependencies(project.configurations.runtime.allDependencies) {
+                it.scope*.value = RUNTIME
+            }
 
-        // COMPILE
-        Configuration compile = project.configurations.compile
-        correctDependencies(compile.allDependencies) {
-            it.scope*.value = COMPILE
-        }
+            // COMPILE
+            Configuration compile = project.configurations.compile
+            correctDependencies(compile.allDependencies) {
+                it.scope*.value = COMPILE
+            }
 
-        // OPTIONAL
-        correctDependencies(
-                project.configurations.optional.allDependencies - (compile.dependencies) as DependencySet) {
-            it.scope*.value = COMPILE
-            it.appendNode(OPTIONAL, 'true')
-        }
+            // OPTIONAL
+            correctDependencies(
+                    project.configurations.optional.allDependencies - (compile.dependencies) as DependencySet) {
+                it.scope*.value = COMPILE
+                it.appendNode(OPTIONAL, 'true')
+            }
 
-        // PROVIDED
-        correctDependencies(
-                project.configurations.provided.allDependencies - (compile.dependencies) as DependencySet) {
-            it.scope*.value = PROVIDED
+            // PROVIDED
+            correctDependencies(
+                    project.configurations.provided.allDependencies - (compile.dependencies) as DependencySet) {
+                it.scope*.value = PROVIDED
+            }
         }
     }
 
