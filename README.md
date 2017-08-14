@@ -4,11 +4,10 @@
 
 ### About
 
-Plugin enhance [maven-publish](https://docs.gradle.org/current/userguide/publishing_maven.html) plugin behaviour and
-adds `optional` and `provided` dependencies support.
+Plugin enhance [maven-publish](https://docs.gradle.org/current/userguide/publishing_maven.html) plugin behaviour.
 
 Features:
-* Support gradle `java-library` plugin
+* [Support](#java-library-plugin) gradle `java-library` plugin
 * Adds `optional` and `provided` configurations when used with `java` or `groovy` plugins (affect only resulted pom)
 * Fix dependencies scopes in generated pom 
 * Add `pom` configuration closure to avoid maven-publish's withXml.
