@@ -12,7 +12,7 @@ class DependencyManagementPluginKitTest extends AbstractKitTest {
             plugins {
                 id 'java'
                 id 'ru.vyarus.pom'
-                id "io.spring.dependency-management" version "0.6.0.RELEASE"
+                id "io.spring.dependency-management" version "1.0.3.RELEASE"
             }
 
             group 'ru.vyarus'
@@ -65,7 +65,7 @@ class DependencyManagementPluginKitTest extends AbstractKitTest {
             plugins {
                 id 'java'
                 id 'ru.vyarus.pom'
-                id "io.spring.dependency-management" version "0.6.0.RELEASE"
+                id "io.spring.dependency-management" version "1.0.3.RELEASE"
             }
 
             group 'ru.vyarus'
