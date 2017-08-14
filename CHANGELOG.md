@@ -1,3 +1,4 @@
+### 1.2.0 (2017-08-15)
 * Fix gradle 4 compatibility: correct runtime dependencies scope 
 * Support java-library plugin: 
     - do not register extra configurations (provided, optional) if java-library registered
