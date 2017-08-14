@@ -1,6 +1,6 @@
 # Gradle POM plugin
-[![License](http://img.shields.io/badge/license-MIT-blue.svg?style=flat)](http://www.opensource.org/licenses/MIT)
-[![Build Status](http://img.shields.io/travis/xvik/gradle-pom-plugin.svg)](https://travis-ci.org/xvik/gradle-pom-plugin)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat)](http://www.opensource.org/licenses/MIT)
+[![Build Status](https://img.shields.io/travis/xvik/gradle-pom-plugin.svg)](https://travis-ci.org/xvik/gradle-pom-plugin)
 
 ### About
 
@@ -8,8 +8,9 @@ Plugin enhance [maven-publish](https://docs.gradle.org/current/userguide/publish
 adds `optional` and `provided` dependencies support.
 
 Features:
-* Adds `optional` and `provided` configurations (affect only resulted pom)
-* Fix dependencies scopes in generated pom (from default runtime)
+* Support gradle `java-library` plugin
+* Adds `optional` and `provided` configurations when used with `java` or `groovy` plugins (affect only resulted pom)
+* Fix dependencies scopes in generated pom 
 * Add `pom` configuration closure to avoid maven-publish's withXml.
 * Add `withPomXml` configuration closure to be able to modify xml manually (shortcut for maven-publish's withXml)
 * Compatible with [spring's dependency management plugin](https://github.com/spring-gradle-plugins/dependency-management-plugin)
@@ -38,7 +39,7 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath 'ru.vyarus:gradle-pom-plugin:1.1.0'
+        classpath 'ru.vyarus:gradle-pom-plugin:1.2.0'
     }
 }
 apply plugin: 'ru.vyarus.pom'
@@ -48,7 +49,7 @@ OR
 
 ```groovy
 plugins {
-    id 'ru.vyarus.pom' version '1.1.0'
+    id 'ru.vyarus.pom' version '1.2.0'
 }
 ```
 
@@ -56,8 +57,12 @@ Plugin must be applied after java or groovy plugins. Otherwise it will do nothin
 
 ### Usage
 
-Plugin implicitly applies `maven-publish` plugin. 
-Publication must be [configured manually](https://docs.gradle.org/current/userguide/publishing_maven.html), for example:
+Plugin requires [java](https://docs.gradle.org/current/userguide/java_plugin.html) or 
+[groovy](https://docs.gradle.org/current/userguide/groovy_plugin.html) or 
+[java-library](https://docs.gradle.org/current/userguide/java_library_plugin.html) plugins to be enabled. 
+
+Plugin implicitly applies [maven-publish](https://docs.gradle.org/current/userguide/publishing_maven.html) plugin. 
+Publication must be [configured manually](https://docs.gradle.org/current/userguide/publishing_maven.html#sec:publishing_component_to_maven), for example:
 
 ```groovy
 publishing {
@@ -71,9 +76,6 @@ publishing {
 
 #### Dependencies
 
-Compile configuration extends provided and optional configurations, so for gradle these dependencies will be the same
-as compile (the difference is only important for resulted pom).
-
 ```groovy
 dependencies {    
     compile 'com.foo:dep-compile:1.0'
@@ -83,7 +85,7 @@ dependencies {
 }
 ```
 
-In resulted pom will be:
+Plugin correct dependencies scopes according to configuration, so the resulted pom will contain:
 
 ```xml
 <dependencies>
@@ -115,7 +117,27 @@ In resulted pom will be:
 </dependencies>
 ```
 
-Note: by default, maven-publish sets runtime scope for all dependencies, but plugin fixes that.
+#### Java and Groovy plugins
+
+Currently (gradle 4), `compile` and `runtime` configurations are deprecated in favour of new `java-library` plugin's 
+`api` and `implementation`. Old configurations could still be used (due to legacy reasons, 
+for [groovy projects](https://docs.gradle.org/current/userguide/java_library_plugin.html#sec:java_library_known_issues_compat)
+or due to [increased memory consumption](https://docs.gradle.org/current/userguide/java_library_plugin.html#sec:java_library_known_issues_memory)). 
+
+Extra `optional` and `provided` configurations registered only if `java-library` plugin not applied
+(because otherwise obviously you want to use new configurations and will not use deprecated compile).
+
+Available [configurations](https://docs.gradle.org/current/userguide/java_plugin.html#sec:java_plugin_and_dependency_management) 
+and the resulted scope in pom:
+
+| Configuration | Pom scope |  
+|---------------|-----------|
+| compile       | compile   |
+| runtime       | runtime   |
+| optional      | compile (with optional marker) |
+| provided      | provided  |
+| compileOnly   | Artifacts not present in pom |
+| runtimeOnly   | runtime  |
 
 ##### Provided and optional configurations
 
@@ -134,7 +156,25 @@ configurations.provided.extendsFrom configurations.myConf
 But, don't forget that `compile` already extends `provided`, so your configuration will be transitively included 
  into compile. Anyway, in resulted pom all dependencies from `myConf` will have provided scope.
 
-##### Usage with [dependency management plugin](https://github.com/spring-gradle-plugins/dependency-management-plugin)
+#### Java-library plugin
+
+When [java-library](https://docs.gradle.org/current/userguide/java_library_plugin.html#)
+plugin used, `optional` and `provided` configurations are **not registered**. 
+Use `compileOnly` instead of provided. 
+
+Available [configurations](https://docs.gradle.org/current/userguide/java_library_plugin.html#sec:java_library_configurations_graph) 
+and the resulted scope in pom:
+
+| Configuration | Migrate from (legacy conf. name) | Pom scope |
+|---------------|----------------------------------|-----------|
+| api            | compile   |  compile   |
+| implementation | compile   |  compile   |
+| compileOnly   |  provided  |  Artifacts not present in pom |
+| runtimeOnly   | runtime    |   runtime  |
+| apiElements    |  --       |  compile   |
+| runtimeElements | --       |  runtime  |
+
+#### Usage with [dependency management plugin](https://github.com/spring-gradle-plugins/dependency-management-plugin)
 
 Do not disable [plugin's pom modifications](https://github.com/spring-gradle-plugins/dependency-management-plugin#pom-generation),
 because without it dependencies in pom file will be without version. Plugin will generate dependencyManagement pom section, which will make
@@ -148,7 +188,7 @@ Other information could be configured through `pom` closure:
 ```groovy
 pom {
     name 'Project Name'
-    description 'My awesome project
+    description 'My awesome project'
     licenses {
         license {
             name "The MIT License"
@@ -272,5 +312,5 @@ Most likely, this will not be an issue, but just keep it in mind when using manu
 * [quality-plugin](https://github.com/xvik/gradle-quality-plugin) - java and groovy source quality checks
 * [animalsniffer-plugin](https://github.com/xvik/gradle-animalsniffer-plugin) - java compatibility checks
 
--
+---
 [![gradle plugin generator](http://img.shields.io/badge/Powered%20by-%20Gradle%20plugin%20generator-green.svg?style=flat-square)](https://github.com/xvik/generator-gradle-plugin)
