@@ -76,10 +76,10 @@ class PomPlugin implements Plugin<Project> {
         if (project.plugins.findPlugin(JAVA_LIB_PLUGIN) == null) {
             ConfigurationContainer configurations = project.configurations
             Configuration provided = configurations.create(PROVIDED)
-            provided.setDescription('Provided works the same as compile configuration and only affects resulted pom')
+            provided.description = 'Provided works the same as compile configuration and only affects resulted pom'
 
             Configuration optional = configurations.create(OPTIONAL)
-            optional.setDescription('Optional works the same as compile configuration and only affects resulted pom')
+            optional.description = 'Optional works the same as compile configuration and only affects resulted pom'
 
             configurations.getByName(JavaPlugin.COMPILE_CONFIGURATION_NAME).extendsFrom(provided, optional)
         }
@@ -112,7 +112,6 @@ class PomPlugin implements Plugin<Project> {
      * @param pomXml pom xml
      */
     private void fixPomDependenciesScopes(Project project, Node pomXml) {
-
         Closure correctDependencies = { DependencySet deps, Closure action ->
             pomXml.dependencies.dependency.findAll {
                 deps.find { Dependency dep ->

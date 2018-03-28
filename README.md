@@ -1,6 +1,8 @@
 # Gradle POM plugin
 [![License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat)](http://www.opensource.org/licenses/MIT)
 [![Build Status](https://img.shields.io/travis/xvik/gradle-pom-plugin.svg)](https://travis-ci.org/xvik/gradle-pom-plugin)
+[![Appveyor build status](https://ci.appveyor.com/api/projects/status/github/xvik/gradle-pom-plugin?svg=true)](https://ci.appveyor.com/project/xvik/gradle-pom-plugin)
+[![codecov](https://codecov.io/gh/xvik/gradle-pom-plugin/branch/master/graph/badge.svg)](https://codecov.io/gh/xvik/gradle-pom-plugin)
 
 ### About
 
@@ -29,7 +31,7 @@ Releases are published to [bintray jcenter](https://bintray.com/vyarus/xvik/grad
 [maven central](https://maven-badges.herokuapp.com/maven-central/ru.vyarus/gradle-pom-plugin) and 
 [gradle plugins portal](https://plugins.gradle.org/plugin/ru.vyarus.pom).
 
-[![JCenter](https://img.shields.io/bintray/v/vyarus/xvik/gradle-pom-plugin.svg?label=jcenter)](https://bintray.com/vyarus/xvik/gradle-pom-plugin/_latestVersion)
+[![JCenter](https://api.bintray.com/packages/vyarus/xvik/gradle-pom-plugin/images/download.svg)](https://bintray.com/vyarus/xvik/gradle-pom-plugin/_latestVersion)
 [![Maven Central](https://img.shields.io/maven-central/v/ru.vyarus/gradle-pom-plugin.svg)](https://maven-badges.herokuapp.com/maven-central/ru.vyarus/gradle-pom-plugin)
 
 ```groovy
@@ -310,6 +312,7 @@ Most likely, this will not be an issue, but just keep it in mind when using manu
 
 * [quality-plugin](https://github.com/xvik/gradle-quality-plugin) - java and groovy source quality checks
 * [animalsniffer-plugin](https://github.com/xvik/gradle-animalsniffer-plugin) - java compatibility checks
+* [mkdocs-plugin](https://github.com/xvik/gradle-mkdocs-plugin) - project documentation generator
 
 ---
 [![gradle plugin generator](http://img.shields.io/badge/Powered%20by-%20Gradle%20plugin%20generator-green.svg?style=flat-square)](https://github.com/xvik/generator-gradle-plugin)

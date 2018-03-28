@@ -132,7 +132,7 @@ final class XmlMerger {
         String name = root.name()
         if (name.startsWith('_')) {
             Node replace = new Node(null, name[1..-1])
-            replace.setValue(root.value())
+            replace.value = root.value()
             root.replaceNode(replace)
         }
         int pos = 0
