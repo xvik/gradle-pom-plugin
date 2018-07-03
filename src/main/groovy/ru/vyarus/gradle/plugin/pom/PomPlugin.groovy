@@ -2,17 +2,24 @@ package ru.vyarus.gradle.plugin.pom
 
 import groovy.transform.CompileStatic
 import groovy.transform.TypeCheckingMode
+import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.ConfigurationContainer
 import org.gradle.api.artifacts.Dependency
 import org.gradle.api.artifacts.DependencySet
+import org.gradle.api.internal.FeaturePreviews
 import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.publish.PublishingExtension
 import org.gradle.api.publish.maven.MavenPublication
 import org.gradle.api.publish.maven.plugins.MavenPublishPlugin
+import org.gradle.util.GradleVersion
 import ru.vyarus.gradle.plugin.pom.xml.XmlMerger
+
+import javax.inject.Inject
+
+import static org.gradle.api.internal.FeaturePreviews.Feature.STABLE_PUBLISHING
 
 /**
  * Pom plugin "fixes" maven-publish plugin pom generation: set correct scopes for dependencies.
@@ -49,10 +56,18 @@ class PomPlugin implements Plugin<Project> {
 
     private static final String JAVA_LIB_PLUGIN = 'java-library'
 
+    private final FeaturePreviews previews
+
+    @Inject
+    PomPlugin(FeaturePreviews featurePreviews) {
+        this.previews = featurePreviews
+    }
+
     @Override
     void apply(Project project) {
         // activated only when java plugin is enabled
         project.plugins.withType(JavaPlugin) {
+            checkGradleCompatibility(project)
             // extensions mechanism not used because we need free closure for pom xml modification
             project.convention.plugins.pom = new PomConvention()
 
@@ -60,6 +75,27 @@ class PomPlugin implements Plugin<Project> {
 
             addConfigurationsIfRequired(project)
             activatePomModifications(project)
+        }
+    }
+
+    private void checkGradleCompatibility(Project project) {
+        // due to base class refactor from groovy to java in gradle 2.14
+        // plugin can't be launched on prior gradle versions
+        GradleVersion version = GradleVersion.current()
+        if (version < GradleVersion.version('4.8')) {
+            throw new GradleException('Pom plugin requires gradle 4.8 or above, ' +
+                    "but your gradle version is: $version.version. Use plugin version 1.2.0.")
+        }
+        // when option become not relevant check will simply don't work anymore
+        if (STABLE_PUBLISHING.isActive() && !previews.isFeatureEnabled(STABLE_PUBLISHING)) {
+            project.logger.warn(
+                    'STABLE_PUBLISHING preview option enabled by \'ru.vyarus.pom\' plugin to prevent ' +
+                            'errors like \n"Cannot configure the \'publishing\' extension after it has ' +
+                            'been accessed".\nIf you still see such error or want to hide this message ' +
+                            'then enable option manually in settings.grade:\n' +
+                            'https://docs.gradle.org/4.8/userguide/publishing_maven.html' +
+                            '#publishing_maven:deferred_configuration')
+            previews.enableFeature(STABLE_PUBLISHING)
         }
     }
 
@@ -86,10 +122,11 @@ class PomPlugin implements Plugin<Project> {
     }
 
     private void activatePomModifications(Project project) {
-        project.afterEvaluate {
-            PublishingExtension publishing = project.publishing
-            // apply to all configured maven publications
-            publishing.publications.withType(MavenPublication) {
+        PublishingExtension publishing = project.publishing
+        // apply to all configured maven publications (even not yet registered)
+        publishing.publications.withType(MavenPublication) {
+            // important to apply after possible user modifications because otherwise duplicate tags will arise
+            project.afterEvaluate {
                 pom.withXml {
                     Node pomXml = asNode()
                     fixPomDependenciesScopes(project, pomXml)

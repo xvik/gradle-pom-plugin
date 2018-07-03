@@ -1,3 +1,15 @@
+* Gradle 4.8 compatibility (support new [publishing behaviour](https://docs.gradle.org/4.8/userguide/publishing_maven.html#publishing_maven:deferred_configuration)):
+    - Requires gradle 4.8 or above (fail with usage error on earlier gradle) 
+    - (breaking) Automatically enables STABLE_PUBLISHING preview flag 
+        (in order to avoid "Cannot configure the 'publishing' extension" errors) 
+        with warning message in console. Message is not shown when flag enabled manually in settings.gradle
+        
+Note that STABLE_PUBLISHING is not required by plugin itself (it may work without it),
+but there is a high chance of problems (caused by other gradle plugins (like behaviour change in JavaGradlePlugin)).
+So option is set to avoid as much problems as possible with publications. 
+You may need to rewrite publication configurations with afterConfiguration block applied inside (to configure some properties lazily)
+In gradle 5.0 option will be enabled by default (and warning will not be shown anymore).                  
+
 ### 1.2.0 (2017-08-15)
 * Fix gradle 4 compatibility: correct runtime dependencies scope 
 * Support java-library plugin: 
