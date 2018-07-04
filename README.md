@@ -9,15 +9,17 @@
 Plugin enhance [maven-publish](https://docs.gradle.org/current/userguide/publishing_maven.html) plugin behaviour.
 
 Features:
-* [Support](#java-library-plugin) gradle `java-library` plugin
+* Support gradle [`java-library` plugin](#java-library-plugin)
 * Adds `optional` and `provided` configurations when used with `java` or `groovy` plugins (affect only resulted pom)
-* Fix dependencies scopes in generated pom 
+* Fix dependencies scopes in generated pom
 * Add `pom` configuration closure to avoid maven-publish's withXml.
 * Add `withPomXml` configuration closure to be able to modify xml manually (shortcut for maven-publish's withXml)
 * Compatible with [spring's dependency management plugin](https://github.com/spring-gradle-plugins/dependency-management-plugin)
 
+Note: Gradle 4.8 provides similar pom dsl: [why pom plugin still matter](#pom-plugin-vs-gradle-pom-dsl)
+
 If you develop java or groovy library you may look to [java-lib plugin](https://github.com/xvik/gradle-java-lib-plugin)
-which already includes `pom` plugin and configures maven publication for you.
+which already includes `pom` plugin and configures maven publication for you (don't confuse with gradle's java-library plugin which only declares api and implementation configurations).
 
 If your project is hosted on github you may look to [github-info plugin](https://github.com/xvik/gradle-github-info-plugin) 
 which fills some pom sections for you automatically. 
@@ -224,7 +226,7 @@ No duplicate tags will be created.
 Only one `pom` closure may be defined: next pom closure completely override previous one.
 If [multiple publications](https://docs.gradle.org/current/userguide/publishing_maven.html#N17EB8) declared, 
 then pom closure will affect all of them. In this case, use it for general info 
-and use [withXml](https://docs.gradle.org/current/userguide/publishing_maven.html#N17E99) for details.
+and use [gradle native dsl](https://docs.gradle.org/4.8/release-notes.html#customizing-the-generated-pom) for details.
 
 ##### Clashed tag names
 
@@ -307,6 +309,97 @@ So xml Node passed into closure contains all modification applied by plugin (exc
 **NOTE** pom plugin uses [withXml](https://docs.gradle.org/current/userguide/publishing_maven.html#sec:modifying_the_generated_pom) to apply pom modifications. 
 If other plugins use withXml too and these plugins registered after pom plugin, then their xml modification will be executed after pom plugin and after `withPomXml` block.
 Most likely, this will not be an issue, but just keep it in mind when using manual xml modifications.
+
+### Pom plugin vs gradle pom dsl
+
+Since gradle 4.8 you can use [dsl like in pom plugin](https://docs.gradle.org/4.8/release-notes.html#customizing-the-generated-pom) in raw gradle:
+
+```groovy
+publishing {
+    publications {
+        maven(MavenPublication) {
+            from components.java
+            // native gradle syntax!
+            pom {
+                name = 'first'
+                scm {
+                  url = "http://subversion.example.com/svn/project/trunk/"
+                }
+            }
+        }
+    }
+}
+```
+
+So why use pom plugin now?
+
+Because maven publication configuration could be moved to external plugin
+(like [ru.vyarus.java-lib](https://github.com/xvik/gradle-java-lib-plugin) which
+ configures maven-compatible publication artifacts) and, in this case, only pom should
+ be customized:
+ 
+```groovy
+plugins {
+    id 'ru.vyarus.java-lib'
+}
+
+pom {
+    name 'first'
+    scm {
+      url "http://subversion.example.com/svn/project/trunk/"
+    }
+}
+```  
+
+Also, pom plugin applies pom declaration to all registered maven publications which
+is useful, for example, for gradle plugin where publication is prepared by closed source plugin.
+
+If pom plugin used together with gradle dsl then pom plugin will merge it's configuration into dsl:
+
+```groovy
+plugins {
+    id 'ru.vyarus.pom'
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            from components.java
+            // native gradle syntax!
+            pom {
+                name = 'first'
+                description = 'desc'
+                scm {
+                  connection = "scm:svn:http://subversion.example.com/svn/project/trunk/"
+                  url = "http://subversion.example.com/svn/project/trunk/"
+                }
+            }
+        }
+    }
+}
+
+pom {
+    name 'custom name'
+    scm {
+      url "http://custom.url/"
+    }
+}
+```
+
+And the resulted pom will contain:
+
+```xml
+<pom>
+    <name>custom name</name>
+    <description>desc</description>
+    <scm>
+        <connection>scm:svn:http://subversion.example.com/svn/project/trunk/</connection>
+        <url>http://custom.url/</url>            
+    </scm>
+</pom>
+``` 
+
+Plus, pom plugin automatically fixes dependencies scopes, which is also important. 
 
 ### Might also like
 
