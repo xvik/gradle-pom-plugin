@@ -19,8 +19,6 @@ import ru.vyarus.gradle.plugin.pom.xml.XmlMerger
 
 import javax.inject.Inject
 
-import static org.gradle.api.internal.FeaturePreviews.Feature.STABLE_PUBLISHING
-
 /**
  * Pom plugin "fixes" maven-publish plugin pom generation: set correct scopes for dependencies.
  * <p>
@@ -87,15 +85,20 @@ class PomPlugin implements Plugin<Project> {
                     "but your gradle version is: $version.version. Use plugin version 1.2.0.")
         }
         // when option become not relevant check will simply don't work anymore
-        if (STABLE_PUBLISHING.isActive() && !previews.isFeatureEnabled(STABLE_PUBLISHING)) {
-            project.logger.warn(
-                    'STABLE_PUBLISHING preview option enabled by \'ru.vyarus.pom\' plugin to prevent ' +
-                            'errors like \n"Cannot configure the \'publishing\' extension after it has ' +
-                            'been accessed".\nIf you still see such error or want to hide this message ' +
-                            'then enable option manually in settings.grade:\n' +
-                            'https://docs.gradle.org/4.8/userguide/publishing_maven.html' +
-                            '#publishing_maven:deferred_configuration')
-            previews.enableFeature(STABLE_PUBLISHING)
+        try {
+            FeaturePreviews.Feature stablePublishing = FeaturePreviews.Feature.withName('STABLE_PUBLISHING')
+            if (stablePublishing.isActive() && !previews.isFeatureEnabled(stablePublishing)) {
+                project.logger.warn(
+                        'STABLE_PUBLISHING preview option enabled by \'ru.vyarus.pom\' plugin to prevent ' +
+                                'errors like \n"Cannot configure the \'publishing\' extension after it has ' +
+                                'been accessed".\nIf you still see such error or want to hide this message ' +
+                                'then enable option manually in settings.grade:\n' +
+                                'https://docs.gradle.org/4.8/userguide/publishing_maven.html' +
+                                '#publishing_maven:deferred_configuration')
+                previews.enableFeature(stablePublishing)
+            }
+        } catch (IllegalArgumentException ignored) {
+            // do nothing if option doesn't exists anymore (.withName() failed)
         }
     }
 
