@@ -6,7 +6,7 @@ package ru.vyarus.gradle.plugin.pom
  */
 class GradleChecksTest extends AbstractKitTest {
 
-    def "Check fail on gradle below 4.8"() {
+    def "Check fail on gradle below 4.6"() {
         setup:
         build("""
             plugins {
@@ -30,10 +30,10 @@ class GradleChecksTest extends AbstractKitTest {
         """)
 
         when: "run on older gradle"
-        def res = runFailedVer('4.7', 'generatePomFileForMavenPublication')
+        def res = runFailedVer('4.5', 'generatePomFileForMavenPublication')
 
         then: "failed"
-        res.output.contains("Pom plugin requires gradle 4.8 or above,")
+        res.output.contains("java.lang.ClassNotFoundException: org.gradle.api.internal.FeaturePreviews")
     }
 
     def "Check manually enabled strict publishing"() {

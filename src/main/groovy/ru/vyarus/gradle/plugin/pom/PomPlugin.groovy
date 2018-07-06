@@ -2,7 +2,6 @@ package ru.vyarus.gradle.plugin.pom
 
 import groovy.transform.CompileStatic
 import groovy.transform.TypeCheckingMode
-import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
@@ -55,7 +54,10 @@ class PomPlugin implements Plugin<Project> {
     private static final String JAVA_LIB_PLUGIN = 'java-library'
 
     private final FeaturePreviews previews
+    // gradle stable publishing feature
+    private boolean stablePublishing = false
 
+    // plugin will fail to initialize on gradle before 4.6
     @Inject
     PomPlugin(FeaturePreviews featurePreviews) {
         this.previews = featurePreviews
@@ -77,28 +79,28 @@ class PomPlugin implements Plugin<Project> {
     }
 
     private void checkGradleCompatibility(Project project) {
-        // due to base class refactor from groovy to java in gradle 2.14
-        // plugin can't be launched on prior gradle versions
-        GradleVersion version = GradleVersion.current()
-        if (version < GradleVersion.version('4.8')) {
-            throw new GradleException('Pom plugin requires gradle 4.8 or above, ' +
-                    "but your gradle version is: $version.version. Use plugin version 1.2.0.")
-        }
-        // when option become not relevant check will simply don't work anymore
-        try {
-            FeaturePreviews.Feature stablePublishing = FeaturePreviews.Feature.withName('STABLE_PUBLISHING')
-            if (stablePublishing.isActive() && !previews.isFeatureEnabled(stablePublishing)) {
-                project.logger.warn(
-                        'STABLE_PUBLISHING preview option enabled by \'ru.vyarus.pom\' plugin to prevent ' +
-                                'errors like \n"Cannot configure the \'publishing\' extension after it has ' +
-                                'been accessed".\nIf you still see such error or want to hide this message ' +
-                                'then enable option manually in settings.grade:\n' +
-                                'https://docs.gradle.org/4.8/userguide/publishing_maven.html' +
-                                '#publishing_maven:deferred_configuration')
-                previews.enableFeature(stablePublishing)
+        if (GradleVersion.current() >= GradleVersion.version('5.0')) {
+            // since 5.0 stable publishing should be enabled by default
+            stablePublishing = true
+        } else {
+            // option available from gradle 4.8
+            try {
+                FeaturePreviews.Feature stablePublishingFeature = FeaturePreviews.Feature
+                        .withName('STABLE_PUBLISHING')
+                if (stablePublishingFeature.isActive() && !previews.isFeatureEnabled(stablePublishingFeature)) {
+                    project.logger.warn(
+                            'STABLE_PUBLISHING preview option enabled by \'ru.vyarus.pom\' plugin to prevent ' +
+                                    'errors like \n"Cannot configure the \'publishing\' extension after it has ' +
+                                    'been accessed".\nIf you still see such error or want to hide this message ' +
+                                    'then enable option manually in settings.grade:\n' +
+                                    'https://docs.gradle.org/4.8/userguide/publishing_maven.html' +
+                                    '#publishing_maven:deferred_configuration')
+                    previews.enableFeature(stablePublishingFeature)
+                    this.stablePublishing = true
+                }
+            } catch (IllegalArgumentException ignored) {
+                // do nothing if option doesn't exists anymore (.withName() failed)
             }
-        } catch (IllegalArgumentException ignored) {
-            // do nothing if option doesn't exists anymore (.withName() failed)
         }
     }
 
@@ -125,15 +127,30 @@ class PomPlugin implements Plugin<Project> {
     }
 
     private void activatePomModifications(Project project) {
-        PublishingExtension publishing = project.publishing
-        // apply to all configured maven publications (even not yet registered)
-        publishing.publications.withType(MavenPublication) {
-            // important to apply after possible user modifications because otherwise duplicate tags will arise
+        if (stablePublishing) {
+            // gradle 4.8 and above
+            PublishingExtension publishing = project.publishing
+            // apply to all configured maven publications (even not yet registered)
+            publishing.publications.withType(MavenPublication) {
+                // important to apply after possible user modifications because otherwise duplicate tags will arise
+                project.afterEvaluate {
+                    pom.withXml {
+                        Node pomXml = asNode()
+                        fixPomDependenciesScopes(project, pomXml)
+                        applyUserPom(project, pomXml)
+                    }
+                }
+            }
+        } else {
+            // old way
             project.afterEvaluate {
-                pom.withXml {
-                    Node pomXml = asNode()
-                    fixPomDependenciesScopes(project, pomXml)
-                    applyUserPom(project, pomXml)
+                PublishingExtension publishing = project.publishing
+                publishing.publications.withType(MavenPublication) {
+                    pom.withXml {
+                        Node pomXml = asNode()
+                        fixPomDependenciesScopes(project, pomXml)
+                        applyUserPom(project, pomXml)
+                    }
                 }
             }
         }
@@ -182,7 +199,7 @@ class PomPlugin implements Plugin<Project> {
             correctDependencies(
                     project.configurations.optional.allDependencies - (compile.dependencies) as DependencySet) {
                 it.scope*.value = COMPILE
-                it.appendNode(OPTIONAL, 'true')
+                it.appendNode(OPTIONAL, true.toString())
             }
 
             // PROVIDED

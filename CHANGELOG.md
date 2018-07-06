@@ -1,14 +1,15 @@
-* Gradle 4.8 compatibility (support new [publishing behaviour](https://docs.gradle.org/4.8/userguide/publishing_maven.html#publishing_maven:deferred_configuration)):
-    - Requires gradle 4.8 or above (fail with usage error on earlier gradle) 
-    - (breaking) Automatically enables STABLE_PUBLISHING preview flag 
-        (in order to avoid "Cannot configure the 'publishing' extension" errors) 
-        with warning message in console. Message is not shown when flag enabled manually in settings.gradle
-        
-Note that STABLE_PUBLISHING is not required by plugin itself (it may work without it),
-but there is a high chance of problems (caused by other gradle plugins (like behaviour change in JavaGradlePlugin)).
-So option is set to avoid as much problems as possible with publications. 
-You may need to rewrite publication configurations with afterConfiguration block applied inside (to configure some properties lazily)
-In gradle 5.0 option will be enabled by default (and warning will not be shown anymore).                  
+* Support new (gradle 4.8) [publishing behaviour](https://docs.gradle.org/4.8/userguide/publishing_maven.html#publishing_maven:deferred_configuration):
+    - Plugin requires gradle 4.6 or above (will fail on earlier gradle).
+    - Gradle 4.6, 4.7 - legacy mode (as before)    
+    - (breaking) Gradle 4.8, <5.0 - automatically enables STABLE_PUBLISHING preview flag 
+        in order to avoid "Cannot configure the 'publishing' extension" errors 
+        (this was done to imporve stability as such errors are extremely hard to debug). 
+        Warning message shown in console about enabled flag. 
+        Message is not shown when flag enabled manually in settings.gradle
+    - Gradle 5.0 and above - assume stable publishing enabled by default (no flag enabling, no warning message)        
+              
+Important: when STABLE_PUBLISHING is enabled (gradle 4.8 and above) publishing configurations will NOT work 
+in a lazy way as before. Use `afterEvaluate {}` INSIDE publication configuration in order to configure lazy properties               
 
 ### 1.2.0 (2017-08-15)
 * Fix gradle 4 compatibility: correct runtime dependencies scope 
