@@ -27,6 +27,12 @@ which fills some pom sections for you automatically.
 Also, you can use [java-library generator](https://github.com/xvik/generator-lib-java) to setup new project with
 all plugins configured.
 
+##### Summary
+
+* Configuration closures: `pom`, `withPomXml`
+* Configurations: `optional`, `provided` (if `java-library` not enabled)       
+* Enable plugins: [maven-publish](https://docs.gradle.org/current/userguide/publishing_maven.html)
+
 ### Setup
 
 **IMPORTANT**: version 1.3.0 and above 
