@@ -29,6 +29,16 @@ all plugins configured.
 
 ### Setup
 
+**IMPORTANT**: version 1.3.0 and above 
+
+* Requires gradle 4.6 or above. For lower gradle use version [1.2.0](https://github.com/xvik/gradle-pom-plugin/tree/1.2.0).
+* For gradle 4.8 and above plugin will enable [STABLE_PUBLISHING preview feature](https://docs.gradle.org/4.8/userguide/publishing_maven.html#publishing_maven:deferred_configuration) -
+disable lazy evaluation of publishing configuration (unification).
+This is required to overcome hard to track `Cannot configure the 'publishing' extension` errors.
+If you need some properties to evaluate lazily wrap them in `afterEvaluate` *inside* publishing configuration.
+* In gradle 5 this preview option will be enabled by default. 
+
+
 Releases are published to [bintray jcenter](https://bintray.com/vyarus/xvik/gradle-pom-plugin/), 
 [maven central](https://maven-badges.herokuapp.com/maven-central/ru.vyarus/gradle-pom-plugin) and 
 [gradle plugins portal](https://plugins.gradle.org/plugin/ru.vyarus.pom).
@@ -42,7 +52,7 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath 'ru.vyarus:gradle-pom-plugin:1.2.0'
+        classpath 'ru.vyarus:gradle-pom-plugin:1.3.0'
     }
 }
 apply plugin: 'ru.vyarus.pom'
@@ -52,7 +62,7 @@ OR
 
 ```groovy
 plugins {
-    id 'ru.vyarus.pom' version '1.2.0'
+    id 'ru.vyarus.pom' version '1.3.0'
 }
 ```
 

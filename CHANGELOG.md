@@ -1,3 +1,4 @@
+### 1.3.0 (2018-07-09)
 * Support new (gradle 4.8) [publishing behaviour](https://docs.gradle.org/4.8/userguide/publishing_maven.html#publishing_maven:deferred_configuration):
     - Plugin requires gradle 4.6 or above (will fail on earlier gradle).
     - Gradle 4.6, 4.7 - legacy mode (as before)    
