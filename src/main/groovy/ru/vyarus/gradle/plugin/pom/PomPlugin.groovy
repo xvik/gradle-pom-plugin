@@ -8,15 +8,11 @@ import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.ConfigurationContainer
 import org.gradle.api.artifacts.Dependency
 import org.gradle.api.artifacts.DependencySet
-import org.gradle.api.internal.FeaturePreviews
 import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.publish.PublishingExtension
 import org.gradle.api.publish.maven.MavenPublication
 import org.gradle.api.publish.maven.plugins.MavenPublishPlugin
-import org.gradle.util.GradleVersion
 import ru.vyarus.gradle.plugin.pom.xml.XmlMerger
-
-import javax.inject.Inject
 
 /**
  * Pom plugin "fixes" maven-publish plugin pom generation: set correct scopes for dependencies.
@@ -53,21 +49,10 @@ class PomPlugin implements Plugin<Project> {
 
     private static final String JAVA_LIB_PLUGIN = 'java-library'
 
-    private final FeaturePreviews previews
-    // gradle stable publishing feature
-    private boolean stablePublishing = false
-
-    // plugin will fail to initialize on gradle before 4.6
-    @Inject
-    PomPlugin(FeaturePreviews featurePreviews) {
-        this.previews = featurePreviews
-    }
-
     @Override
     void apply(Project project) {
         // activated only when java plugin is enabled
         project.plugins.withType(JavaPlugin) {
-            checkGradleCompatibility(project)
             // extensions mechanism not used because we need free closure for pom xml modification
             project.convention.plugins.pom = new PomConvention()
 
@@ -75,32 +60,6 @@ class PomPlugin implements Plugin<Project> {
 
             addConfigurationsIfRequired(project)
             activatePomModifications(project)
-        }
-    }
-
-    private void checkGradleCompatibility(Project project) {
-        if (GradleVersion.current() >= GradleVersion.version('5.0')) {
-            // since 5.0 stable publishing should be enabled by default
-            stablePublishing = true
-        } else {
-            // option available from gradle 4.8
-            try {
-                FeaturePreviews.Feature stablePublishingFeature = FeaturePreviews.Feature
-                        .withName('STABLE_PUBLISHING')
-                if (stablePublishingFeature.isActive() && !previews.isFeatureEnabled(stablePublishingFeature)) {
-                    project.logger.warn(
-                            'STABLE_PUBLISHING preview option enabled by \'ru.vyarus.pom\' plugin to prevent ' +
-                                    'errors like \n"Cannot configure the \'publishing\' extension after it has ' +
-                                    'been accessed".\nIf you still see such error or want to hide this message ' +
-                                    'then enable option manually in settings.grade:\n' +
-                                    'https://docs.gradle.org/4.8/userguide/publishing_maven.html' +
-                                    '#publishing_maven:deferred_configuration')
-                    previews.enableFeature(stablePublishingFeature)
-                    this.stablePublishing = true
-                }
-            } catch (IllegalArgumentException ignored) {
-                // do nothing if option doesn't exists anymore (.withName() failed)
-            }
         }
     }
 
@@ -127,30 +86,15 @@ class PomPlugin implements Plugin<Project> {
     }
 
     private void activatePomModifications(Project project) {
-        if (stablePublishing) {
-            // gradle 4.8 and above
-            PublishingExtension publishing = project.publishing
-            // apply to all configured maven publications (even not yet registered)
-            publishing.publications.withType(MavenPublication) {
-                // important to apply after possible user modifications because otherwise duplicate tags will arise
-                project.afterEvaluate {
-                    pom.withXml {
-                        Node pomXml = asNode()
-                        fixPomDependenciesScopes(project, pomXml)
-                        applyUserPom(project, pomXml)
-                    }
-                }
-            }
-        } else {
-            // old way
+        PublishingExtension publishing = project.publishing
+        // apply to all configured maven publications (even not yet registered)
+        publishing.publications.withType(MavenPublication) {
+            // important to apply after possible user modifications because otherwise duplicate tags will arise
             project.afterEvaluate {
-                PublishingExtension publishing = project.publishing
-                publishing.publications.withType(MavenPublication) {
-                    pom.withXml {
-                        Node pomXml = asNode()
-                        fixPomDependenciesScopes(project, pomXml)
-                        applyUserPom(project, pomXml)
-                    }
+                pom.withXml {
+                    Node pomXml = asNode()
+                    fixPomDependenciesScopes(project, pomXml)
+                    applyUserPom(project, pomXml)
                 }
             }
         }
