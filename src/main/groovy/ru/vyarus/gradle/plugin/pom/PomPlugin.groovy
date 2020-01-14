@@ -19,8 +19,8 @@ import ru.vyarus.gradle.plugin.pom.xml.XmlMerger
  * <p>
  * Plugin must be applied after java, java-library or groovy plugin.
  * <p>
- * During pom generation dependencies scope is automatically fixed for implementation (compile) dependencies (gradle always
- * set runtime for them), compileOnly dependencies are added to pom as provided.
+ * During pom generation dependencies scope is automatically fixed for implementation (compile) dependencies
+ * (gradle always set runtime for them), compileOnly dependencies are added to pom as provided.
  * <p>
  * Plugin implicitly activates maven-publish plugin. But publication still must be configured manually:
  * pom plugin only fixes behaviour, but not replace configuration.

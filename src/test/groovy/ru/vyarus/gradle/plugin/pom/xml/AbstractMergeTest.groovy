@@ -16,7 +16,11 @@ abstract class AbstractMergeTest extends Specification {
     }
 
     static String xml(Node base) {
-        def res = "\n" + XmlUtil.serialize(base).replaceAll("\r", "").replaceAll(" +\n", "\n")
+        def res = "\n" + XmlUtil.serialize(base)
+                .replaceAll("\r", "")
+                // on java 11 groovy inserts blank lines between tags
+                .replaceAll('\n {1,}\n', '\n')
+                .replaceAll(" +\n", "\n")
         println res
         res
     }
