@@ -18,14 +18,17 @@ class PomPluginKitTest extends AbstractKitTest {
             version 1.0
             description 'sample description'
 
-            dependencies {                
-                provided 'com.google.code.findbugs:annotations:3.0.0'
-                optional 'ru.vyarus:generics-resolver:2.0.0'
-                runtime 'ru.vyarus:guice-ext-annotations:1.1.1'
-                compile 'org.javassist:javassist:3.16.1-GA'
-                
-                compileOnly 'ru.vyarus:gradle-pom-plugin:1.0.0'
-                runtimeOnly 'ru.vyarus:gradle-quality-plugin:2.0.0'
+            dependencies {                                         
+                // compile
+                implementation 'org.javassist:javassist:3.16.1-GA'
+                // provided             
+                compileOnly 'com.google.code.findbugs:annotations:3.0.0'
+                // runtime
+                runtimeOnly 'ru.vyarus:guice-ext-annotations:1.1.1'
+
+                // deprecated
+                compile 'ru.vyarus:gradle-pom-plugin:1.0.0'
+                runtime 'ru.vyarus:gradle-quality-plugin:2.0.0'
             }
 
             publishing {
@@ -61,24 +64,19 @@ class PomPluginKitTest extends AbstractKitTest {
         // for debug
         println pomFile.getText()
 
-        then: "runtime dependency scope corrected"
+        then: "implmentation dependency scope corrected"
+        pom.dependencies.'*'.find { it.artifactId.text() == 'javassist' }.scope.text() == 'compile'
+
+        then: "compileOnly dependencies added"
+        pom.dependencies.'*'.find { it.artifactId.text() == 'annotations' }.scope.text() == 'provided'
+
+        then: "runtimeOnly dependency scope correct"
         pom.dependencies.'*'.find { it.artifactId.text() == 'guice-ext-annotations' }.scope.text() == 'runtime'
 
         then: "compile dependency scope corrected"
-        pom.dependencies.'*'.find { it.artifactId.text() == 'javassist' }.scope.text() == 'compile'
+        pom.dependencies.'*'.find { it.artifactId.text() == 'gradle-pom-plugin' }.scope.text() == 'compile'
 
-        then: "provided dependency scope corrected"
-        pom.dependencies.'*'.find { it.artifactId.text() == 'annotations' }.scope.text() == 'provided'
-
-        then: "optional dependency scope corrected"
-        def dep = pom.dependencies.'*'.find { it.artifactId.text() == 'generics-resolver' }
-        dep.scope.text() == 'compile'
-        dep.optional.text() == 'true'
-
-        then: "compileOnly dependencies are removed from pom"
-        pom.dependencies.'*'.find { it.artifactId.text() == 'gradle-pom-plugin' } == null
-
-        then: "runtimeOnly dependency scope corrected"
+        then: "runtime dependency scope corrected"
         pom.dependencies.'*'.find { it.artifactId.text() == 'gradle-quality-plugin' }.scope.text() == 'runtime'
 
         then: "pom modification applied"
@@ -189,10 +187,12 @@ class PomPluginKitTest extends AbstractKitTest {
             version 1.0
 
             dependencies {
-                provided 'com.google.code.findbugs:annotations:3.0.0'
-                optional 'ru.vyarus:generics-resolver:2.0.0'
-                runtime 'ru.vyarus:guice-ext-annotations:1.1.1'
-                compile 'org.javassist:javassist:3.16.1-GA'
+                 // compile
+                implementation 'org.javassist:javassist:3.16.1-GA'
+                // provided             
+                compileOnly 'com.google.code.findbugs:annotations:3.0.0'
+                // runtime
+                runtimeOnly 'ru.vyarus:guice-ext-annotations:1.1.1'
             }
 
             publishing {

@@ -4,10 +4,10 @@ import groovy.transform.CompileStatic
 import groovy.transform.TypeCheckingMode
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.ConfigurationContainer
 import org.gradle.api.artifacts.Dependency
 import org.gradle.api.artifacts.DependencySet
+import org.gradle.api.internal.artifacts.configurations.ConfigurationContainerInternal
 import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.publish.PublishingExtension
 import org.gradle.api.publish.maven.MavenPublication
@@ -19,16 +19,8 @@ import ru.vyarus.gradle.plugin.pom.xml.XmlMerger
  * <p>
  * Plugin must be applied after java, java-library or groovy plugin.
  * <p>
- * If java plugin used (and NOT java-library) applies new configurations:
- * <ul>
- *      <li>provided</li>
- *      <li>optional</li>
- * </ul>
- * Compile configuration extends from both, so build consider all dependencies types as compile.
- * The difference is visible only in resulted pom.
- * <p>
- * During pom generation dependencies scope is automatically fixed for compile dependencies (gradle always
- * set runtime for them) and provided and optional dependencies are also correctly marked.
+ * During pom generation dependencies scope is automatically fixed for implementation (compile) dependencies (gradle always
+ * set runtime for them), compileOnly dependencies are added to pom as provided.
  * <p>
  * Plugin implicitly activates maven-publish plugin. But publication still must be configured manually:
  * pom plugin only fixes behaviour, but not replace configuration.
@@ -44,10 +36,7 @@ class PomPlugin implements Plugin<Project> {
 
     private static final String COMPILE = 'compile'
     private static final String RUNTIME = 'runtime'
-    private static final String OPTIONAL = 'optional'
     private static final String PROVIDED = 'provided'
-
-    private static final String JAVA_LIB_PLUGIN = 'java-library'
 
     @Override
     void apply(Project project) {
@@ -57,31 +46,7 @@ class PomPlugin implements Plugin<Project> {
             project.convention.plugins.pom = new PomConvention()
 
             project.plugins.apply(MavenPublishPlugin)
-
-            addConfigurationsIfRequired(project)
             activatePomModifications(project)
-        }
-    }
-
-    /**
-     * Optional and provided configurations must be applied only if java plugin used (for legacy reasons).
-     * For java-library plugin extra configurations are not required: optional is never user and compileOnly
-     * could be used instead of provided (compileOnly dependencies are not present in pom).
-     * <p>
-     * IMPORTANT: java-library plugin must be registered BEFORE, otherwise it would not be detected
-     *
-     * @param project project
-     */
-    private void addConfigurationsIfRequired(Project project) {
-        if (project.plugins.findPlugin(JAVA_LIB_PLUGIN) == null) {
-            ConfigurationContainer configurations = project.configurations
-            Configuration provided = configurations.create(PROVIDED)
-            provided.description = 'Provided works the same as compile configuration and only affects resulted pom'
-
-            Configuration optional = configurations.create(OPTIONAL)
-            optional.description = 'Optional works the same as compile configuration and only affects resulted pom'
-
-            configurations.getByName(JavaPlugin.COMPILE_CONFIGURATION_NAME).extendsFrom(provided, optional)
         }
     }
 
@@ -113,44 +78,48 @@ class PomPlugin implements Plugin<Project> {
      * @param pomXml pom xml
      */
     private void fixPomDependenciesScopes(Project project, Node pomXml) {
-        Closure correctDependencies = { DependencySet deps, Closure action ->
-            pomXml.dependencies.dependency.findAll {
+        Node dependencies = pomXml.dependencies[0]
+        Closure correctDependencies = { DependencySet deps, String requiredScope ->
+            if (deps.empty) {
+                return
+            }
+            dependencies.dependency.findAll {
                 deps.find { Dependency dep ->
                     dep.group == it.groupId.text() && dep.name == it.artifactId.text()
                 }
-            }.each(action)
+            }.each {
+                it.scope*.value = requiredScope
+            }
         }
 
-        boolean javaLibrary = project.plugins.findPlugin(JAVA_LIB_PLUGIN) != null
-        if (javaLibrary) {
-            // IMPLEMENTATION (must be compile in pom instead of runtime)
-            correctDependencies(project.configurations.implementation.allDependencies) {
-                it.scope*.value = COMPILE
-            }
-        } else {
-            // RUNTIME
-            correctDependencies(project.configurations.runtime.allDependencies) {
-                it.scope*.value = RUNTIME
-            }
+        ConfigurationContainer configurations = project.configurations
+        correctDependencies(configurations.implementation.allDependencies, COMPILE)
 
-            // COMPILE
-            Configuration compile = project.configurations.compile
-            correctDependencies(compile.allDependencies) {
-                it.scope*.value = COMPILE
-            }
+        // NOTE java-library api configuration will be correctly added with compile scope
 
-            // OPTIONAL
-            correctDependencies(
-                    project.configurations.optional.allDependencies - (compile.dependencies) as DependencySet) {
-                it.scope*.value = COMPILE
-                it.appendNode(OPTIONAL, true.toString())
+        // add compileOnly dependencies (not added by gradle)
+        configurations.compileOnly.allDependencies.each {
+            // could be null if no other dependencies declared
+            Node deps = dependencies
+            if (deps == null) {
+                deps = pomXml.appendNode('dependencies')
             }
+            Node dep = deps.appendNode('dependency')
+            dep.appendNode('groupId', it.group)
+            dep.appendNode('artifactId', it.name)
+            dep.appendNode('version', it.version)
+            dep.appendNode('scope', PROVIDED)
+        }
 
-            // PROVIDED
-            correctDependencies(
-                    project.configurations.provided.allDependencies - (compile.dependencies) as DependencySet) {
-                it.scope*.value = PROVIDED
-            }
+        // deprecated configurations fixes: existence check is required as they will be removed in gradle 7 (or 8)
+
+        if ((configurations as ConfigurationContainerInternal).findByName(RUNTIME) != null) {
+            // not allDependencies because runtime extends compile
+            correctDependencies(configurations.runtime.dependencies, RUNTIME)
+        }
+
+        if ((configurations as ConfigurationContainerInternal).findByName(COMPILE) != null) {
+            correctDependencies(configurations.compile.allDependencies, COMPILE)
         }
     }
 

@@ -69,8 +69,8 @@ class JavaLibraryCompatibilityKitTest extends AbstractKitTest {
         then: "runtimeOnly dependency scope valid"
         pom.dependencies.'*'.find { it.artifactId.text() == 'guice-ext-annotations' }.scope.text() == 'runtime'
 
-        then: "compileOnly dependency removed"
-        pom.dependencies.'*'.find { it.artifactId.text() == 'javassist' } == null
+        then: "compileOnly dependency scope corrected"
+        pom.dependencies.'*'.find { it.artifactId.text() == 'javassist' }.scope.text() == 'provided'
 
         then: "api elements dependencies valid"
         pom.dependencies.'*'.find { it.artifactId.text() == 'generics-resolver' }.scope.text() == 'compile'

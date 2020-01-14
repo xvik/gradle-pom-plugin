@@ -22,11 +22,11 @@ class ExtraConfigurationKitTest extends AbstractKitTest {
             version 1.0
             description 'sample description'
 
-            configurations.provided.extendsFrom configurations.apt
+            configurations.compileOnly.extendsFrom configurations.apt
 
             repositories { jcenter() }
             dependencies {
-                compile 'com.google.code.gson:gson:2.6.2'
+                implementation 'com.google.code.gson:gson:2.6.2'
 
                 apt 'org.immutables:value:2.1.19'
                 apt 'org.immutables:builder:2.1.19'

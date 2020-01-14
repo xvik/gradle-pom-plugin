@@ -1,4 +1,8 @@
 * (breaking) Require gradle 5 or above (stable publishing automatic enabling removed as 5.0 enables it by default)
+* (breaking) Removed provided configuration: compileOnly must be used instead
+    - (breaking) Plugin will now add compileOnly dependencies to the resulted pom (in provided scope) 
+        because in some cases it may be important to know exact versions by looking on pom
+* (breaking) Removed optional configuration: [gradle feature variants](https://docs.gradle.org/5.6.4/userguide/feature_variants.html#header) must be used instead
 
 ### 1.3.0 (2018-07-09)
 * Support new (gradle 4.8) [publishing behaviour](https://docs.gradle.org/4.8/userguide/publishing_maven.html#publishing_maven:deferred_configuration):
