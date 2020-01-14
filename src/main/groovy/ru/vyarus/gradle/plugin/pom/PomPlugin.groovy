@@ -74,7 +74,8 @@ class PomPlugin implements Plugin<Project> {
     private void fixPomDependenciesScopes(Project project, Node pomXml) {
         Node dependencies = pomXml.dependencies[0]
         Closure correctDependencies = { DependencySet deps, String requiredScope ->
-            if (deps.empty) {
+            if (!dependencies || deps.empty) {
+                // avoid redundant searches (if no deps in xml or no artifacts in configuration)
                 return
             }
             dependencies.dependency.findAll {
