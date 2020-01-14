@@ -66,13 +66,7 @@ class PomPlugin implements Plugin<Project> {
     }
 
     /**
-     * Gradle sets compile scope for all dependencies and this has to be fixed.
-     * <p>
-     * To avoid overriding scope for dependencies directly specified as compile, but also present as
-     * transitives in provided or optional, all direct compile dependencies are excluded when looking
-     * for optional and provided.
-     * <p>
-     * NOTE this does not cover cases when compile extends other configurations, but such cases should be rare.
+     * Gradle sets runtime scope for all dependencies and this has to be fixed.
      *
      * @param project project instance
      * @param pomXml pom xml
@@ -94,32 +88,41 @@ class PomPlugin implements Plugin<Project> {
 
         ConfigurationContainer configurations = project.configurations
         correctDependencies(configurations.implementation.allDependencies, COMPILE)
+        // add "provided" dependencies
+        addCompileOnlyDependencies(configurations, pomXml)
 
-        // NOTE java-library api configuration will be correctly added with compile scope
+        // NOTE java-library's "api" configuration will be correctly added with compile scope
 
+        // deprecated configurations fixes: existence check is required as they will be removed in gradle 7 (or 8)
+        if ((configurations as ConfigurationContainerInternal).findByName(RUNTIME) != null) {
+            // not allDependencies because runtime extends compile
+            correctDependencies(configurations.runtime.dependencies, RUNTIME)
+        }
+        if ((configurations as ConfigurationContainerInternal).findByName(COMPILE) != null) {
+            correctDependencies(configurations.compile.allDependencies, COMPILE)
+        }
+    }
+
+    private void addCompileOnlyDependencies(ConfigurationContainer configurations, Node pomXml) {
+        Node dependencies = pomXml.dependencies[0]
         // add compileOnly dependencies (not added by gradle)
+        boolean hasXmlDeps = dependencies != null
         configurations.compileOnly.allDependencies.each {
-            // could be null if no other dependencies declared
-            Node deps = dependencies
-            if (deps == null) {
-                deps = pomXml.appendNode('dependencies')
+            // check for duplicate declaration (just in case of incorrect declaration)
+            if (hasXmlDeps && dependencies.dependency.find { dep ->
+                dep.groupId.text() == it.group && dep.artifactId.text() == it.name
+            }) {
+                return
             }
+
+            // could be null if no other dependencies declared
+            Node deps = hasXmlDeps ? dependencies : pomXml.appendNode('dependencies')
+
             Node dep = deps.appendNode('dependency')
             dep.appendNode('groupId', it.group)
             dep.appendNode('artifactId', it.name)
             dep.appendNode('version', it.version)
             dep.appendNode('scope', PROVIDED)
-        }
-
-        // deprecated configurations fixes: existence check is required as they will be removed in gradle 7 (or 8)
-
-        if ((configurations as ConfigurationContainerInternal).findByName(RUNTIME) != null) {
-            // not allDependencies because runtime extends compile
-            correctDependencies(configurations.runtime.dependencies, RUNTIME)
-        }
-
-        if ((configurations as ConfigurationContainerInternal).findByName(COMPILE) != null) {
-            correctDependencies(configurations.compile.allDependencies, COMPILE)
         }
     }
 
