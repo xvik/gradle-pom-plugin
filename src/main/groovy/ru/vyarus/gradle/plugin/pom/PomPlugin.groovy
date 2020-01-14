@@ -76,6 +76,7 @@ class PomPlugin implements Plugin<Project> {
         Closure correctDependencies = { DependencySet deps, String requiredScope ->
             if (!dependencies || deps.empty) {
                 // avoid redundant searches (if no deps in xml or no artifacts in configuration)
+                // for example, this may arise if gradleApi() used as dependency
                 return
             }
             dependencies.dependency.findAll {
@@ -109,6 +110,12 @@ class PomPlugin implements Plugin<Project> {
         // add compileOnly dependencies (not added by gradle)
         boolean hasXmlDeps = dependencies != null
         configurations.compileOnly.allDependencies.each {
+            // self-resolving dependencies like gradleApi() are not added to xml by gradle and should not
+            // be added from compileOnly too
+            if (it.group == null) {
+                return
+            }
+
             // check for duplicate declaration (just in case of incorrect declaration)
             if (hasXmlDeps && dependencies.dependency.find { dep ->
                 dep.groupId.text() == it.group && dep.artifactId.text() == it.name
