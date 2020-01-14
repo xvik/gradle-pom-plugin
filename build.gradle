@@ -13,7 +13,7 @@ plugins {
     id "pl.droidsonroids.jacoco.testkit" version "1.0.5"
 }
 
-sourceCompatibility = 1.7
+sourceCompatibility = 1.8
 
 wrapper {
     gradleVersion = '5.6.4'

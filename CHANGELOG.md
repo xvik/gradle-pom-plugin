@@ -1,3 +1,4 @@
+* (breaking) Drop java 7 support
 * (breaking) Require gradle 5 or above (stable publishing automatic enabling removed as 5.0 enables it by default)
 * (breaking) Removed provided configuration: compileOnly must be used instead
     - (breaking) Plugin will now add compileOnly dependencies to the resulted pom (in provided scope) 
