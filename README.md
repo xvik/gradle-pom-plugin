@@ -72,7 +72,7 @@ plugins {
 }
 ```
 
-Plugin must be applied after java or groovy plugins. Otherwise it will do nothing.
+Plugin must be applied after java or groovy plugins. Otherwise, it will do nothing.
 
 #### Snapshots
 
@@ -81,6 +81,7 @@ Plugin must be applied after java or groovy plugins. Otherwise it will do nothin
 
 * Go to [JitPack project page](https://jitpack.io/#ru.vyarus/gradle-pom-plugin)
 * Select `Commits` section and click `Get it` on commit you want to use (you may need to wait while version builds if no one requested it before)
+    or use `master-SNAPSHOT` to use the most recent snapshot
 
 For gradle before 6.0 use `buildscript` block with required commit hash as version:
 
@@ -90,7 +91,7 @@ buildscript {
         maven { url 'https://jitpack.io' }
     }
     dependencies {
-        classpath 'ru.vyarus:gradle-pom-plugin:b5a8aee24f'
+        classpath 'com.github.xvik:gradle-pom-plugin:b5a8aee24f'
     }
 }
 apply plugin: 'ru.vyarus.pom'
@@ -105,7 +106,7 @@ For gradle 6.0 and above:
       resolutionStrategy {
           eachPlugin {
               if (requested.id.namespace == 'ru.vyarus.pom') {
-                  useModule('ru.vyarus:gradle-pom-plugin:b5a8aee24f')
+                  useModule('com.github.xvik:gradle-pom-plugin:b5a8aee24f')
               }
           }
       }
