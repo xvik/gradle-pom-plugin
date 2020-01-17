@@ -9,6 +9,7 @@ import org.gradle.api.artifacts.Dependency
 import org.gradle.api.artifacts.DependencySet
 import org.gradle.api.internal.artifacts.configurations.ConfigurationContainerInternal
 import org.gradle.api.plugins.JavaPlugin
+import org.gradle.api.plugins.WarPlugin
 import org.gradle.api.publish.PublishingExtension
 import org.gradle.api.publish.maven.MavenPublication
 import org.gradle.api.publish.maven.plugins.MavenPublishPlugin
@@ -90,10 +91,9 @@ class PomPlugin implements Plugin<Project> {
 
         ConfigurationContainer configurations = project.configurations
         correctDependencies(configurations.implementation.allDependencies, COMPILE)
+
         // add "provided" dependencies
         addCompileOnlyDependencies(configurations, pomXml)
-
-        // NOTE java-library's "api" configuration will be correctly added with compile scope
 
         // deprecated configurations fixes: existence check is required as they will be removed in gradle 7 (or 8)
         if ((configurations as ConfigurationContainerInternal).findByName(RUNTIME) != null) {
@@ -102,6 +102,12 @@ class PomPlugin implements Plugin<Project> {
         }
         if ((configurations as ConfigurationContainerInternal).findByName(COMPILE) != null) {
             correctDependencies(configurations.compile.allDependencies, COMPILE)
+        }
+
+        // war plugin configurations by default added as compile, which is wrong
+        project.plugins.withType(WarPlugin) {
+            correctDependencies(configurations.providedCompile.allDependencies, PROVIDED)
+            correctDependencies(configurations.providedRuntime.allDependencies, PROVIDED)
         }
     }
 
