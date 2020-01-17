@@ -154,6 +154,7 @@ runtime     | runtimeOnly
 provided    | compileOnly
 optional    | [gradle feature](#optional-dependencies)
 
+Also, see [good article](https://reflectoring.io/maven-scopes-gradle-configurations/) describing maven/gradle scope analogies.
 
 #### Dependencies
 
@@ -173,6 +174,8 @@ Plugin fixes dependencies scopes in the generated pom:
 Note: in context of gradle `java-library` plugin, both `api` and `implementation` dependencies stored in pom as `compile` dependencies
 because there is only build time difference (it's a gradle optimization) between configurations and module still need `implementation` dependencies.
 For the end user they both are usual transitive dependencies and must have compile scope. 
+
+Read [this article](https://reflectoring.io/gradle-pollution-free-dependencies/) to better understand api-implementation difference for gradle.
 
 For example:
 
