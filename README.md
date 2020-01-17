@@ -170,14 +170,20 @@ Plugin fixes dependencies scopes in the generated pom:
  providedCompile | **provided** | compile | only with [war](https://docs.gradle.org/current/userguide/war_plugin.html#sec:war_dependency_management) plugin
  providedRuntime | **provided** | compile | only with [war](https://docs.gradle.org/current/userguide/war_plugin.html#sec:war_dependency_management) plugin
 
+Note: in context of gradle `java-library` plugin, both `api` and `implementation` dependencies stored in pom as `compile` dependencies
+because there is only build time difference (it's a gradle optimization) between configurations and module still need implementation dependencies
+and so for the end user they are usual transitive dependencies and must have compile scope. 
+
 For example:
 
 ```groovy
+plugins {
+    id: 'java'
+}
 dependencies {    
     implementation 'com.foo:dep-compile:1.0'
     runtimeOnly 'com.foo:dep-runtime:1.0'
-    compileOnly 'com.foo:dep-provided:1.0'
-    api 'com.foo:dep-api-compile:1.0'        
+    compileOnly 'com.foo:dep-provided:1.0' 
 }
 ```
 
@@ -202,6 +208,31 @@ Will result in:
         <artifactId>dep-provided</artifactId>
         <version>1.0</version>
         <scope>provided</scope>
+    </dependency>
+</dependencies>
+```
+
+And
+
+```groovy
+plugins {
+    id: 'java-library'
+}
+dependencies {    
+    implementation 'com.foo:dep-compile:1.0'
+    api 'com.foo:dep-api-compile:1.0'        
+}
+```
+
+Will produce:
+
+```xml
+<dependencies>
+     <dependency>
+        <groupId>com.foo</groupId>
+        <artifactId>dep-compile</artifactId>
+        <version>1.0</version>
+        <scope>compile</scope>
     </dependency>
     <dependency>
         <groupId>com.foo</groupId>
