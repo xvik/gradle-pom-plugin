@@ -266,12 +266,18 @@ This is *native gradle behaviour*: showing just for reference.
 Gradle provides native support for [importing BOMs](https://docs.gradle.org/current/userguide/dependency_management_terminology.html#sub::terminology_platform),
 but I'm still recommend to use spring's [dependency-management](https://github.com/spring-gradle-plugins/dependency-management-plugin) plugin 
 instead of it because of more correct behaviour 
-(it use maven-resolver inside and so resolve dependencies *exactly* the same as maven).
+(it uses maven-resolver inside and so resolve dependencies *exactly* the same as maven).
 
 Do not disable [plugin's pom modifications](https://github.com/spring-gradle-plugins/dependency-management-plugin#pom-generation),
 because without it dependencies in pom file will be without version. Plugin will generate dependencyManagement pom section, which will make
 pom dependencies without version valid.
 
+Extra: [this article](https://www.nexocode.com/blog/posts/spring-dependencies-in-gradle/) describes replacing spring 
+plugin with the core gradle features. Even if I'm not agree with this, examples are very good and may be helpful.
+Keep in mind that with spring plugin you may generate your own BOM quite easily (for example, [here](https://github.com/xvik/dropwizard-guicey) I can use project's generated pom as BOM), 
+whereas in gradle you'll have to use additional [java-platform](https://docs.gradle.org/current/userguide/java_platform_plugin.html) plugin
+and create separate module only for BOM declaration (you can see example of spring plugin usage in multi-module project [here](https://github.com/xvik/dropwizard-guicey-ext),
+and yes it also extracts BOM to submodule, but it's not a declaration separation - it's just a publication of root project dependencies configuration).
 
 #### Pom configuration
 
