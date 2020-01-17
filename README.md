@@ -40,7 +40,7 @@ all plugins configured.
 
 [![JCenter](https://img.shields.io/bintray/v/vyarus/xvik/gradle-pom-plugin.svg?label=jcenter)](https://bintray.com/vyarus/xvik/gradle-pom-plugin/_latestVersion)
 [![Maven Central](https://img.shields.io/maven-central/v/ru.vyarus/gradle-pom-plugin.svg)](https://maven-badges.herokuapp.com/maven-central/ru.vyarus/gradle-pom-plugin)
-[![Gradle Plugin Portal](https://img.shields.io/maven-metadata/v/https/plugins.gradle.org/m2/ru/vyarus/pom/ru.vyarus.pom.gradle.plugin/maven-metadata.xml.svg?colorB=007ec6&label=plugins%20portal)](https://plugins.gradle.org/plugin/ru.vyarus.quality)
+[![Gradle Plugin Portal](https://img.shields.io/maven-metadata/v/https/plugins.gradle.org/m2/ru/vyarus/pom/ru.vyarus.pom.gradle.plugin/maven-metadata.xml.svg?colorB=007ec6&label=plugins%20portal)](https://plugins.gradle.org/plugin/ru.vyarus.pom)
 
 ```groovy
 buildscript {
