@@ -80,7 +80,7 @@ older   | [1.2.0](https://github.com/xvik/gradle-pom-plugin/tree/1.2.0)
 <details>
       <summary>Snapshots may be used through JitPack</summary>
 
-* Go to [JitPack project page](https://jitpack.io/#com.github.xvik/gradle-pom-plugin)
+* Go to [JitPack project page](https://jitpack.io/#xvik/gradle-pom-plugin)
 * Select `Commits` section and click `Get it` on commit you want to use (you may need to wait while version builds if no one requested it before)
     or use `master-SNAPSHOT` to use the most recent snapshot
 
