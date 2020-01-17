@@ -236,7 +236,18 @@ dependencies {
 ```
 
 Here new configuration `provided` created and `compileOnly` extends it. This trick works because pom plugin 
-adds not only `compileOnly` dependencies, but also all super configurations. 
+adds not only `compileOnly` dependencies, but also all super configurations: 
+
+```xml
+ <dependencies>
+    <dependency>
+        <groupId>com.google.code.findbugs</groupId>
+        <artifactId>annotations</artifactId>
+        <version>3.0.0</version>
+        <scope>provided</scope>
+    </dependency>
+</dependencies>
+```
 
 ###### War plugin
 
