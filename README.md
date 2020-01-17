@@ -171,8 +171,8 @@ Plugin fixes dependencies scopes in the generated pom:
  providedRuntime | **provided** | compile | only with [war](https://docs.gradle.org/current/userguide/war_plugin.html#sec:war_dependency_management) plugin
 
 Note: in context of gradle `java-library` plugin, both `api` and `implementation` dependencies stored in pom as `compile` dependencies
-because there is only build time difference (it's a gradle optimization) between configurations and module still need implementation dependencies
-and so for the end user they are usual transitive dependencies and must have compile scope. 
+because there is only build time difference (it's a gradle optimization) between configurations and module still need `implementation` dependencies.
+For the end user they both are usual transitive dependencies and must have compile scope. 
 
 For example:
 
