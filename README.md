@@ -6,20 +6,24 @@
 
 ### About
 
-Plugin enhance [maven-publish](https://docs.gradle.org/current/userguide/publishing_maven.html) plugin behaviour.
+Plugin fixes pom generation by [maven-publish](https://docs.gradle.org/current/userguide/publishing_maven.html) plugin
+and brings back configuration simplicity from legacy maven plugin.
 
 Features:
-* Support gradle [`java-library` plugin](#java-library-plugin)
-* Adds `optional` and `provided` configurations when used with `java` or `groovy` plugins (affect only resulted pom)
-* Fix dependencies scopes in generated pom
-* Add `pom` configuration closure to avoid maven-publish's withXml.
-* Add `withPomXml` configuration closure to be able to modify xml manually (shortcut for maven-publish's withXml)
-* Compatible with [spring's dependency management plugin](https://github.com/spring-gradle-plugins/dependency-management-plugin)
 
-Note: Gradle 4.8 provides similar pom dsl: [why pom plugin still matter](#pom-plugin-vs-gradle-pom-dsl)
+* Fix [dependencies scopes](#dependencies) in the generated pom
+    - Include `compileOnly` dependencies with [provided scope](#provided-dependencies)
+    - Fix [war](https://docs.gradle.org/current/userguide/war_plugin.html#sec:war_dependency_management) plugin provided dependencies
+* Add global pom configuration shortcuts (applied to all publications):
+    - [pom](#pom-configuration) configuration closure to avoid maven-publish's withXml.
+    - [withPomXml](#manual-pom-modification) configuration closure to be able to modify xml manually (shortcut for maven-publish's withXml)
+* Compatible with:
+    - Gradle [java-library](https://docs.gradle.org/current/userguide/java_library_plugin.html) plugin
+    - Spring [dependency-management](#usage-with-spring-dependency-management-plugin) plugin
 
 If you develop java or groovy library you may look to [java-lib plugin](https://github.com/xvik/gradle-java-lib-plugin)
-which already includes `pom` plugin and configures maven publication for you (don't confuse with gradle's java-library plugin which only declares api and implementation configurations).
+which already includes `pom` plugin and configures maven publication for you 
+(don't confuse with gradle's `java-library` plugin which only declares `api` and `implementation` configurations).
 
 If your project is hosted on github you may look to [github-info plugin](https://github.com/xvik/gradle-github-info-plugin) 
 which fills some pom sections for you automatically. 
@@ -29,21 +33,10 @@ all plugins configured.
 
 ##### Summary
 
-* Configuration closures: `pom`, `withPomXml`
-* Configurations: `optional`, `provided` (if `java-library` not enabled)       
+* Configuration closures: `pom`, `withPomXml`  
 * Enable plugins: [maven-publish](https://docs.gradle.org/current/userguide/publishing_maven.html)
 
 ### Setup
-
-**IMPORTANT**: version 1.3.0 and above 
-
-* Requires gradle 4.6 or above. For lower gradle use version [1.2.0](https://github.com/xvik/gradle-pom-plugin/tree/1.2.0).
-* For gradle 4.8 and above plugin will enable [STABLE_PUBLISHING preview feature](https://docs.gradle.org/4.8/userguide/publishing_maven.html#publishing_maven:deferred_configuration) -
-disable lazy evaluation of publishing configuration (unification).
-This is required to overcome hard to track `Cannot configure the 'publishing' extension` errors.
-If you need some properties to evaluate lazily wrap them in `afterEvaluate` *inside* publishing configuration.
-* In gradle 5 this preview option will be enabled by default. 
-
 
 Releases are published to [bintray jcenter](https://bintray.com/vyarus/xvik/gradle-pom-plugin/), 
 [maven central](https://maven-badges.herokuapp.com/maven-central/ru.vyarus/gradle-pom-plugin) and 
@@ -58,7 +51,7 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath 'ru.vyarus:gradle-pom-plugin:1.3.0'
+        classpath 'ru.vyarus:gradle-pom-plugin:2.0.0'
     }
 }
 apply plugin: 'ru.vyarus.pom'
@@ -68,18 +61,26 @@ OR
 
 ```groovy
 plugins {
-    id 'ru.vyarus.pom' version '1.3.0'
+    id 'ru.vyarus.pom' version '2.0.0'
 }
 ```
 
-Plugin must be applied after java or groovy plugins. Otherwise, it will do nothing.
+#### Compatibility
+
+Plugin compiled for java 8, compatible with java 11
+
+Gradle | Version
+--------|-------
+5.x     | 2.0.0
+4.6     | [1.3.0](https://github.com/xvik/gradle-pom-plugin/tree/1.3.0)
+older   | [1.2.0](https://github.com/xvik/gradle-pom-plugin/tree/1.2.0)
 
 #### Snapshots
 
 <details>
       <summary>Snapshots may be used through JitPack</summary>
 
-* Go to [JitPack project page](https://jitpack.io/#ru.vyarus/gradle-pom-plugin)
+* Go to [JitPack project page](https://jitpack.io/#com.github.xvik/gradle-pom-plugin)
 * Select `Commits` section and click `Get it` on commit you want to use (you may need to wait while version builds if no one requested it before)
     or use `master-SNAPSHOT` to use the most recent snapshot
 
@@ -143,20 +144,47 @@ publishing {
         }
     }
 }
-```
+``` 
+
+(see [java-lib](https://github.com/xvik/gradle-java-lib-plugin) plugin for automatic publication registration)
+
+Maven scopes reference:
+
+Maven scope | Gradle configuration
+------------| ----------------
+compile     | implementation, api
+runtime     | runtimeOnly
+provided    | compileOnly
+optional    | [gradle feature](#optional-dependencies)
+
 
 #### Dependencies
 
+Plugin fixes dependencies scopes in the generated pom:
+
+ Configuration | Fixed scope | Native behaviour | Note    
+---------------|-----------|----|---
+ api       | compile   | compile |  ony with [java-library](https://docs.gradle.org/current/userguide/java_library_plugin.html#sec:java_library_separation) plugin 
+ implementation | **compile** |  runtime |   
+ compileOnly       | **provided**   | dependencies not added |   
+ runtimeOnly        | runtime | runtime |    
+ *compile*   | compile | compile |  *deprecated!* avoid using
+ *runtime*   | **runtime**  | compile | *deprecated!* avoid using
+ providedCompile | **provided** | compile | only with [war](https://docs.gradle.org/current/userguide/war_plugin.html#sec:war_dependency_management) plugin
+ providedRuntime | **provided** | compile | only with [war](https://docs.gradle.org/current/userguide/war_plugin.html#sec:war_dependency_management) plugin
+
+For example:
+
 ```groovy
 dependencies {    
-    compile 'com.foo:dep-compile:1.0'
-    runtime 'com.foo:dep-runtime:1.0'
-    provided 'com.foo:dep-provided:1.0'
-    optional 'com.foo:dep-optional:1.0'        
+    implementation 'com.foo:dep-compile:1.0'
+    runtimeOnly 'com.foo:dep-runtime:1.0'
+    compileOnly 'com.foo:dep-provided:1.0'
+    api 'com.foo:dep-api-compile:1.0'        
 }
 ```
 
-Plugin correct dependencies scopes according to configuration, so the resulted pom will contain:
+Will result in:
 
 ```xml
 <dependencies>
@@ -180,80 +208,74 @@ Plugin correct dependencies scopes according to configuration, so the resulted p
     </dependency>
     <dependency>
         <groupId>com.foo</groupId>
-        <artifactId>dep-optional</artifactId>
+        <artifactId>dep-api-compile</artifactId>
         <version>1.0</version>
         <scope>compile</scope>
-        <optional>true</optional>
     </dependency>
 </dependencies>
 ```
 
-#### Java and Groovy plugins
+##### Provided dependencies
 
-Currently (gradle 4), `compile` and `runtime` configurations are deprecated in favour of new `java-library` plugin's 
-`api` and `implementation`. Old configurations could still be used (due to legacy reasons, 
-for [groovy projects](https://docs.gradle.org/current/userguide/java_library_plugin.html#sec:java_library_known_issues_compat)
-or due to [increased memory consumption](https://docs.gradle.org/current/userguide/java_library_plugin.html#sec:java_library_known_issues_memory)). 
+`compileOnly` is the [official gradle analog](https://blog.gradle.org/introducing-compile-only-dependencies)
+for maven `provided` scope. 
 
-Extra `optional` and `provided` configurations registered only if `java-library` plugin not applied
-(because otherwise obviously you want to use new configurations and will not use deprecated compile).
+But, by default, these dependencies are not added to the generated pom. This is not correct because
+it become impossible to validate library version, used for compilation by looking at pom
+(and it may be very important in some cases).  
 
-Available [configurations](https://docs.gradle.org/current/userguide/java_plugin.html#sec:java_plugin_and_dependency_management) 
-and the resulted scope in pom:
+That's why plugin adds all `compileOnly` dependencies with `provided` scope: for consultation.
 
-| Configuration | Pom scope |  
-|---------------|-----------|
-| compile       | compile   |
-| runtime       | runtime   |
-| optional      | compile (with optional marker) |
-| provided      | provided  |
-| compileOnly   | Artifacts not present in pom |
-| runtimeOnly   | runtime  |
+Gradle [war](https://docs.gradle.org/current/userguide/war_plugin.html#sec:war_dependency_management) plugin declares it's own
+provided configurations `providedCompile` and `providedRuntime` and these dependencies are not going into 
+resulted war, but contained in the generated pom as `compile`. Plugin fixes such dependencies scope to `provided`
+(how it could be declared in pure maven).  
 
-##### Provided and optional configurations
+##### Optional dependencies
 
-Plugin registers `provided` and `optional` configurations and makes `compile` configuration extend them.
-So, for gradle, `provided` and `optional` dependencies will work the same as `compile`.
-
-Only during pom generation plugin will detect dependencies from `provided` or `optional` and mark them accordingly 
-in generated pom.
-
-If you want to include some other configuration dependencies as provided in pom, you can do:
+Optional dependencies may be declared with [gradle feature variants](https://docs.gradle.org/5.6.4/userguide/feature_variants.html#header):
 
 ```groovy
-configurations.provided.extendsFrom configurations.myConf
+java {
+    registerFeature('someFeature') {
+        usingSourceSet(sourceSets.main)
+    }     
+}
+
+dependencies {                                                       
+    someFeatureImplementation 'com.google.code.findbugs:annotations:3.0.0'                
+}
 ```
 
-But, don't forget that `compile` already extends `provided`, so your configuration will be transitively included 
- into compile. Anyway, in resulted pom all dependencies from `myConf` will have provided scope.
+```xml
+<dependencies>
+    <dependency>
+      <groupId>com.google.code.findbugs</groupId>
+      <artifactId>annotations</artifactId>
+      <version>3.0.0</version>
+      <scope>compile</scope>
+      <optional>true</optional>
+    </dependency>
+</dependencies>
+```
 
-#### Java-library plugin
+This is *native gradle behaviour*: showing just for reference.
 
-When [java-library](https://docs.gradle.org/current/userguide/java_library_plugin.html#)
-plugin used, `optional` and `provided` configurations are **not registered**. 
-Use `compileOnly` instead of provided. 
+#### Usage with spring dependency-management plugin
 
-Available [configurations](https://docs.gradle.org/current/userguide/java_library_plugin.html#sec:java_library_configurations_graph) 
-and the resulted scope in pom:
-
-| Configuration | Migrate from (legacy conf. name) | Pom scope |
-|---------------|----------------------------------|-----------|
-| api            | compile   |  compile   |
-| implementation | compile   |  compile   |
-| compileOnly   |  provided  |  Artifacts not present in pom |
-| runtimeOnly   | runtime    |   runtime  |
-| apiElements    |  --       |  compile   |
-| runtimeElements | --       |  runtime  |
-
-#### Usage with [dependency management plugin](https://github.com/spring-gradle-plugins/dependency-management-plugin)
+Gradle provides native support for [importing BOMs](https://docs.gradle.org/current/userguide/dependency_management_terminology.html#sub::terminology_platform),
+but I'm still recommend to use spring's [dependency-management](https://github.com/spring-gradle-plugins/dependency-management-plugin) plugin 
+instead of it because of more correct behaviour 
+(it use maven-resolver inside and so resolve dependencies *exactly* the same as maven).
 
 Do not disable [plugin's pom modifications](https://github.com/spring-gradle-plugins/dependency-management-plugin#pom-generation),
 because without it dependencies in pom file will be without version. Plugin will generate dependencyManagement pom section, which will make
 pom dependencies without version valid.
 
+
 #### Pom configuration
 
-By default, maven-publish plugin fills pom only with dependencies and artifact id, group and version. 
+By default, `maven-publish` plugin fills pom only with dependencies and artifact id, group and version. 
 Other information could be configured through `pom` closure:
 
 ```groovy
@@ -283,6 +305,7 @@ pom {
 ```
 
 Closure doesn't restrict structure: any tags may be used. 
+
 If `name` and `description` not specified, they will be applied implicitly from `project.name` and `project.description`.
 
 Here is [complete example](https://github.com/xvik/gradle-pom-plugin/blob/master/src/test/groovy/ru/vyarus/gradle/plugin/pom/PomSectionsTest.groovy#L28)
@@ -294,7 +317,7 @@ No duplicate tags will be created.
 Only one `pom` closure may be defined: next pom closure completely override previous one.
 If [multiple publications](https://docs.gradle.org/current/userguide/publishing_maven.html#N17EB8) declared, 
 then pom closure will affect all of them. In this case, use it for general info 
-and use [gradle native dsl](https://docs.gradle.org/4.8/release-notes.html#customizing-the-generated-pom) for details.
+and use [gradle native dsl](#gradle-pom-dsl) for details.
 
 ##### Clashed tag names
 
@@ -344,7 +367,7 @@ Pom will be generated by default in `build/publications/mavenJava/pom-default.xm
 
 #### Manual pom modification
 
-If for, some any reason, you need to modify pom manually (like in [withXml closure](https://docs.gradle.org/current/userguide/publishing_maven.html#sec:modifying_the_generated_pom))
+If, for any reason, you need to modify pom manually (like in [withXml closure](https://docs.gradle.org/current/userguide/publishing_maven.html#sec:modifying_the_generated_pom))
 you can use define `withPomXml` configuration closure:
 
 ```groovy
@@ -378,7 +401,7 @@ So xml Node passed into closure contains all modification applied by plugin (exc
 If other plugins use withXml too and these plugins registered after pom plugin, then their xml modification will be executed after pom plugin and after `withPomXml` block.
 Most likely, this will not be an issue, but just keep it in mind when using manual xml modifications.
 
-### Pom plugin vs gradle pom dsl
+### Gradle pom dsl
 
 Since gradle 4.8 you can use [dsl like in pom plugin](https://docs.gradle.org/4.8/release-notes.html#customizing-the-generated-pom) in raw gradle:
 
@@ -422,7 +445,7 @@ pom {
 Also, pom plugin applies pom declaration to all registered maven publications which
 is useful, for example, for gradle plugin where publication is prepared by closed source plugin.
 
-If pom plugin used together with gradle dsl then pom plugin will merge it's configuration into dsl:
+If pom plugin used together with gradle dsl then pom plugin will merge its configuration into dsl:
 
 ```groovy
 plugins {
@@ -467,7 +490,7 @@ And the resulted pom will contain:
 </pom>
 ``` 
 
-Plus, pom plugin automatically fixes dependencies scopes, which is also important. 
+(and, of course, fixed dependencies)
 
 ### Might also like
 
