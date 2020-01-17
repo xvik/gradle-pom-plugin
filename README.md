@@ -38,12 +38,9 @@ all plugins configured.
 
 ### Setup
 
-Releases are published to [bintray jcenter](https://bintray.com/vyarus/xvik/gradle-pom-plugin/), 
-[maven central](https://maven-badges.herokuapp.com/maven-central/ru.vyarus/gradle-pom-plugin) and 
-[gradle plugins portal](https://plugins.gradle.org/plugin/ru.vyarus.pom).
-
-[![JCenter](https://api.bintray.com/packages/vyarus/xvik/gradle-pom-plugin/images/download.svg)](https://bintray.com/vyarus/xvik/gradle-pom-plugin/_latestVersion)
+[![JCenter](https://img.shields.io/bintray/v/vyarus/xvik/gradle-pom-plugin.svg?label=jcenter)](https://bintray.com/vyarus/xvik/gradle-pom-plugin/_latestVersion)
 [![Maven Central](https://img.shields.io/maven-central/v/ru.vyarus/gradle-pom-plugin.svg)](https://maven-badges.herokuapp.com/maven-central/ru.vyarus/gradle-pom-plugin)
+[![Gradle Plugin Portal](https://img.shields.io/maven-metadata/v/https/plugins.gradle.org/m2/ru/vyarus/pom/ru.vyarus.pom.gradle.plugin/maven-metadata.xml.svg?colorB=007ec6&label=plugins%20portal)](https://plugins.gradle.org/plugin/ru.vyarus.quality)
 
 ```groovy
 buildscript {
@@ -225,6 +222,23 @@ it become impossible to validate library version, used for compilation by lookin
 (and it may be very important in some cases).  
 
 That's why plugin adds all `compileOnly` dependencies with `provided` scope: for consultation.
+
+###### Provided scope alias
+
+If `compileOnly` name is not good enough for you, you can declare your own name for provided configuration:
+
+```groovy
+configurations.compileOnly.extendsFrom configurations.create('provided')
+
+dependencies {                                                      
+    provided 'com.google.code.findbugs:annotations:3.0.0'                
+}
+```
+
+Here new configuration `provided` created and `compileOnly` extends it. This trick works because pom plugin 
+adds not only `compileOnly` dependencies, but also all super configurations. 
+
+###### War plugin
 
 Gradle [war](https://docs.gradle.org/current/userguide/war_plugin.html#sec:war_dependency_management) plugin declares it's own
 provided configurations `providedCompile` and `providedRuntime` and these dependencies are not going into 

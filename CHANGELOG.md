@@ -1,3 +1,4 @@
+### 2.0.0 (2020-01-17)
 * (breaking) Drop java 7 support
 * (breaking) Require gradle 5 or above (stable publishing automatic enabling removed as 5.0 enables it by default)
 * (breaking) Removed provided configuration: compileOnly must be used instead
