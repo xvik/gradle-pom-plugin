@@ -48,7 +48,7 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath 'ru.vyarus:gradle-pom-plugin:2.0.0'
+        classpath 'ru.vyarus:gradle-pom-plugin:2.0.1'
     }
 }
 apply plugin: 'ru.vyarus.pom'
@@ -58,7 +58,7 @@ OR
 
 ```groovy
 plugins {
-    id 'ru.vyarus.pom' version '2.0.0'
+    id 'ru.vyarus.pom' version '2.0.1'
 }
 ```
 
@@ -68,7 +68,7 @@ Plugin compiled for java 8, compatible with java 11
 
 Gradle | Version
 --------|-------
-5.x     | 2.0.0
+5.x     | 2.0.1
 4.6     | [1.3.0](https://github.com/xvik/gradle-pom-plugin/tree/1.3.0)
 older   | [1.2.0](https://github.com/xvik/gradle-pom-plugin/tree/1.2.0)
 
@@ -325,7 +325,8 @@ This is *native gradle behaviour*: showing just for reference.
 Gradle provides native support for [importing BOMs](https://docs.gradle.org/current/userguide/dependency_management_terminology.html#sub::terminology_platform),
 but I'm still recommend to use spring's [dependency-management](https://github.com/spring-gradle-plugins/dependency-management-plugin) plugin 
 instead of it because of more correct behaviour 
-(it uses maven-resolver inside and so resolve dependencies *exactly* the same as maven).
+(it uses maven-resolver inside and so resolve dependencies [exactly](https://github.com/spring-gradle-plugins/dependency-management-plugin/issues/211#issuecomment-387362326) 
+the same as maven).
 
 Do not disable [plugin's pom modifications](https://github.com/spring-gradle-plugins/dependency-management-plugin#pom-generation),
 because without it dependencies in pom file will be without version. Plugin will generate dependencyManagement pom section, which will make

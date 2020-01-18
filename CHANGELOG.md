@@ -1,3 +1,4 @@
+### 2.0.1 (2020-01-19)
 * Fix compileOnly dependencies managed by spring BOM plugin (without version) generation in pom
 
 ### 2.0.0 (2020-01-17)
