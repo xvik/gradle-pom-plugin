@@ -77,7 +77,7 @@ older   | [1.2.0](https://github.com/xvik/gradle-pom-plugin/tree/1.2.0)
 <details>
       <summary>Snapshots may be used through JitPack</summary>
 
-* Go to [JitPack project page](https://jitpack.io/#xvik/gradle-pom-plugin)
+* Go to [JitPack project page](https://jitpack.io/#ru.vyarus/gradle-pom-plugin)
 * Select `Commits` section and click `Get it` on commit you want to use (you may need to wait while version builds if no one requested it before)
     or use `master-SNAPSHOT` to use the most recent snapshot
 
@@ -89,7 +89,7 @@ buildscript {
         maven { url 'https://jitpack.io' }
     }
     dependencies {
-        classpath 'com.github.xvik:gradle-pom-plugin:b5a8aee24f'
+        classpath 'ru.vyarus:gradle-pom-plugin:b5a8aee24f'
     }
 }
 apply plugin: 'ru.vyarus.pom'
@@ -104,7 +104,7 @@ For gradle 6.0 and above:
       resolutionStrategy {
           eachPlugin {
               if (requested.id.namespace == 'ru.vyarus.pom') {
-                  useModule('com.github.xvik:gradle-pom-plugin:b5a8aee24f')
+                  useModule('ru.vyarus:gradle-pom-plugin:b5a8aee24f')
               }
           }
       }
