@@ -135,7 +135,10 @@ class PomPlugin implements Plugin<Project> {
             Node dep = deps.appendNode('dependency')
             dep.appendNode('groupId', it.group)
             dep.appendNode('artifactId', it.name)
-            dep.appendNode('version', it.version)
+            // dependency may be managed by spring BOM plugin and rely on dependencyManagement block in pom
+            if (it.version) {
+                dep.appendNode('version', it.version)
+            }
             dep.appendNode('scope', PROVIDED)
         }
     }

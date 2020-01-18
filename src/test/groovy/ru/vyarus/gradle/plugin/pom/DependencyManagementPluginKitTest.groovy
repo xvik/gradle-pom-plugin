@@ -118,4 +118,68 @@ class DependencyManagementPluginKitTest extends AbstractKitTest {
         then: "compile dependency version not set"
         !dep.version
     }
+
+
+    def "Check compileOnly dependency from bom"() {
+        setup:
+        build("""
+            plugins {
+                id 'java'
+                id 'ru.vyarus.pom'
+                id "io.spring.dependency-management" version "1.0.8.RELEASE"
+            }
+
+            group 'ru.vyarus'
+            version 1.0
+            description 'sample description'     
+
+            repositories { jcenter(); mavenCentral(); mavenLocal() }
+            dependencyManagement {                   
+                dependencies {
+                    dependency "junit:junit:4.12"
+                }
+            }
+            dependencies {
+                compileOnly 'junit:junit'
+            }  
+
+            pom {
+                developers {
+                    developer {
+                        id 'jdoe'
+                        name 'John Doe'
+                    }
+                }
+            }
+
+            publishing {
+                publications {
+                    maven(MavenPublication) {
+                        from components.java
+                    }
+                }
+            }
+
+            model {
+                tasks.generatePomFileForMavenPublication {
+                    destination = file("\$buildDir/generated-pom.xml")
+                }
+            }
+        """)
+
+        when: "run pom task"
+        run('generatePomFileForMavenPublication')
+
+        def pomFile = file("build/generated-pom.xml")
+        def pom = new XmlParser().parse(pomFile)
+        // for debug
+        println pomFile.getText()
+
+        then: "compile dependency scope corrected"
+        def dep = pom.dependencies.'*'.find { it.artifactId.text() == 'junit' }
+        dep.scope.text() == 'provided'
+
+        then: "compile dependency version not set"
+        !dep.version
+    }
 }
