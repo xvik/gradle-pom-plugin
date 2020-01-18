@@ -10,6 +10,12 @@
 * (breaking) Removed optional configuration: [gradle feature variants](https://docs.gradle.org/5.6.4/userguide/feature_variants.html#header) must be used instead
 * Support war plugin: providedCompile and providedRuntime dependencies scope changed to provided (from compile) 
 
+Configurations migration:
+
+- `provided` --> `compileOnly`
+- `compile` --> `imlementation`
+- `runtime` --> `runtimeOnly`
+
 ### 1.3.0 (2018-07-09)
 * Support new (gradle 4.8) [publishing behaviour](https://docs.gradle.org/4.8/userguide/publishing_maven.html#publishing_maven:deferred_configuration):
     - Plugin requires gradle 4.6 or above (will fail on earlier gradle).
