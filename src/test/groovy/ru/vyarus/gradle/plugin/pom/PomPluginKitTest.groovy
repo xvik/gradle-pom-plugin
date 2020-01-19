@@ -20,11 +20,13 @@ class PomPluginKitTest extends AbstractKitTest {
 
             dependencies {                                         
                 // compile
-                implementation 'org.javassist:javassist:3.16.1-GA'
-                // provided             
-                compileOnly 'com.google.code.findbugs:annotations:3.0.0'
+                implementation 'org.javassist:javassist:3.16.1-GA'         
+                provided 'com.google.code.findbugs:annotations:3.0.0'
                 // runtime
-                runtimeOnly 'ru.vyarus:guice-ext-annotations:1.1.1'
+                runtimeOnly 'ru.vyarus:guice-ext-annotations:1.1.1'  
+                optional 'ru.vyarus:generics-resolver:2.0.0'
+                // disappear    
+                compileOnly 'junit:junit:4.12'
 
                 // deprecated
                 compile 'ru.vyarus:gradle-pom-plugin:1.0.0'
@@ -64,14 +66,22 @@ class PomPluginKitTest extends AbstractKitTest {
         // for debug
         println pomFile.getText()
 
-        then: "implmentation dependency scope corrected"
+        then: "implementation dependency scope corrected"
         pom.dependencies.'*'.find { it.artifactId.text() == 'javassist' }.scope.text() == 'compile'
 
-        then: "compileOnly dependencies added"
+        then: "provided dependency scope corrected"
         pom.dependencies.'*'.find { it.artifactId.text() == 'annotations' }.scope.text() == 'provided'
 
         then: "runtimeOnly dependency scope correct"
         pom.dependencies.'*'.find { it.artifactId.text() == 'guice-ext-annotations' }.scope.text() == 'runtime'
+
+        then: "optional dependency scope corrected"
+        def opt = pom.dependencies.'*'.find { it.artifactId.text() == 'generics-resolver' }
+        opt.scope.text() == 'compile'
+        opt.optional.text() == 'true'
+
+        then: "compileOnly dependencies are removed from pom"
+        pom.dependencies.'*'.find { it.artifactId.text() == 'junit' } == null
 
         then: "compile dependency scope corrected"
         pom.dependencies.'*'.find { it.artifactId.text() == 'gradle-pom-plugin' }.scope.text() == 'compile'

@@ -49,7 +49,7 @@ class NotStandardDependencyKitTest extends AbstractKitTest {
         pom.dependencies.size() == 0
     }
 
-    def "Check indirect compileOnly dependency"() {
+    def "Check indirect provided dependency"() {
         setup:
         build("""
             plugins {
@@ -62,7 +62,7 @@ class NotStandardDependencyKitTest extends AbstractKitTest {
             description 'sample description'
 
             dependencies {                                                         
-                compileOnly gradleApi()                                
+                provided gradleApi()                                
             }
 
             publishing {
@@ -143,7 +143,7 @@ class NotStandardDependencyKitTest extends AbstractKitTest {
         pom.dependencies.'*'.find { it.artifactId.text() == 'mod' }.scope.text() == 'compile'
     }
 
-    def "Check project compileOnly dependency"() {
+    def "Check project provided dependency"() {
         setup:
         build("""
             plugins {
@@ -163,7 +163,7 @@ class NotStandardDependencyKitTest extends AbstractKitTest {
             }
 
             dependencies {                                                         
-                compileOnly project(':mod')                                
+                provided project(':mod')                                
             }
 
             publishing {

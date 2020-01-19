@@ -22,7 +22,7 @@ class WarCompatibilityTest extends AbstractKitTest {
             dependencies {
                 implementation 'ru.vyarus:gradle-quality-plugin:2.0.0'
                 runtimeOnly 'ru.vyarus:guice-ext-annotations:1.1.1'
-                compileOnly 'org.javassist:javassist:3.16.1-GA'
+                provided 'org.javassist:javassist:3.16.1-GA'
                 providedCompile 'ru.vyarus:generics-resolver:2.0.0'
                 providedRuntime 'com.google.code.findbugs:annotations:3.0.0'
             }
@@ -66,7 +66,7 @@ class WarCompatibilityTest extends AbstractKitTest {
         then: "runtimeOnly dependency scope valid"
         pom.dependencies.'*'.find { it.artifactId.text() == 'guice-ext-annotations' }.scope.text() == 'runtime'
 
-        then: "compileOnly dependency scope corrected"
+        then: "provided dependency scope corrected"
         pom.dependencies.'*'.find { it.artifactId.text() == 'javassist' }.scope.text() == 'provided'
 
         then: "provided dependencies valid"

@@ -116,8 +116,8 @@ class NoDependenciesBlockKitTest extends AbstractKitTest {
         // for debug
         println pomFile.getText()
 
-        then: "compileOnly dependencies added"
-        pom.dependencies.'*'.find { it.artifactId.text() == 'annotations' }.scope.text() == 'provided'
+        then: "no dependencies"
+        pom.dependencies.'*'.size() == 0
 
         then: "pom modification applied"
         def developer = pom.developers.developer

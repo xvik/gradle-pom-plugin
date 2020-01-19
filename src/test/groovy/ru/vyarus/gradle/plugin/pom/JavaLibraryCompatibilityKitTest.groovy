@@ -24,7 +24,8 @@ class JavaLibraryCompatibilityKitTest extends AbstractKitTest {
                 runtimeOnly 'ru.vyarus:guice-ext-annotations:1.1.1'
                 compileOnly 'org.javassist:javassist:3.16.1-GA'
                 apiElements 'ru.vyarus:generics-resolver:2.0.0'
-                runtimeElements 'com.google.code.findbugs:annotations:3.0.0'
+                runtimeElements 'com.google.code.findbugs:annotations:3.0.0'   
+                provided 'junit:junit:4.12'
             }
 
             publishing {
@@ -69,14 +70,17 @@ class JavaLibraryCompatibilityKitTest extends AbstractKitTest {
         then: "runtimeOnly dependency scope valid"
         pom.dependencies.'*'.find { it.artifactId.text() == 'guice-ext-annotations' }.scope.text() == 'runtime'
 
-        then: "compileOnly dependency scope corrected"
-        pom.dependencies.'*'.find { it.artifactId.text() == 'javassist' }.scope.text() == 'provided'
+        then: "compileOnly dependency removed"
+        pom.dependencies.'*'.find { it.artifactId.text() == 'javassist' } == null
 
         then: "api elements dependencies valid"
         pom.dependencies.'*'.find { it.artifactId.text() == 'generics-resolver' }.scope.text() == 'compile'
 
         then: "runtime elements dependencies valid"
         pom.dependencies.'*'.find { it.artifactId.text() == 'annotations' }.scope.text() == 'runtime'
+
+        then: "provided dependency scope corrected"
+        pom.dependencies.'*'.find { it.artifactId.text() == 'junit' }.scope.text() == 'provided'
 
         then: "pom modification applied"
         def developer = pom.developers.developer

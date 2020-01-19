@@ -175,11 +175,7 @@ class DependencyManagementPluginKitTest extends AbstractKitTest {
         // for debug
         println pomFile.getText()
 
-        then: "compile dependency scope corrected"
-        def dep = pom.dependencies.'*'.find { it.artifactId.text() == 'junit' }
-        dep.scope.text() == 'provided'
-
-        then: "compile dependency version not set"
-        !dep.version
+        then: "compileOnly dependency not added"
+        pom.dependencies.'*'.find { it.artifactId.text() == 'junit' } == null
     }
 }

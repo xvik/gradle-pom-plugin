@@ -1,7 +1,13 @@
-### 2.0.1 (2020-01-19)
+* Partially reverting 1.3 behavior: add `optional` and `provided` configurations because it appears that it's not possible in gradle to completely replace them
+    - Now `optinoal` and `provided` would be included into `implementation` configuration (and not `compile` as before),
+        but this will not change anything from usage perspective 
+    - `compileOnly` dependencies no more added as provided (they are removed as before)!
+    - These configurations would be available even with `java-library` plugin (in 1.3 they were not)          
+
+### 2.0.1 (2020-01-19) DON'T USE
 * Fix compileOnly dependencies managed by spring BOM plugin (without version) generation in pom
 
-### 2.0.0 (2020-01-17)
+### 2.0.0 (2020-01-17) DON'T USE
 * (breaking) Drop java 7 support
 * (breaking) Require gradle 5 or above (stable publishing automatic enabling removed as 5.0 enables it by default)
 * (breaking) Removed provided configuration: compileOnly must be used instead

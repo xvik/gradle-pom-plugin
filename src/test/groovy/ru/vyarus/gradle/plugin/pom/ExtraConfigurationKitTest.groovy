@@ -22,7 +22,7 @@ class ExtraConfigurationKitTest extends AbstractKitTest {
             version 1.0
             description 'sample description'
 
-            configurations.compileOnly.extendsFrom configurations.apt
+            configurations.provided.extendsFrom configurations.apt
 
             repositories { jcenter() }
             dependencies {

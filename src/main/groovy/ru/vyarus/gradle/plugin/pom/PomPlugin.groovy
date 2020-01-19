@@ -4,6 +4,7 @@ import groovy.transform.CompileStatic
 import groovy.transform.TypeCheckingMode
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.ConfigurationContainer
 import org.gradle.api.artifacts.Dependency
 import org.gradle.api.artifacts.DependencySet
@@ -19,6 +20,16 @@ import ru.vyarus.gradle.plugin.pom.xml.XmlMerger
  * Pom plugin "fixes" maven-publish plugin pom generation: set correct scopes for dependencies.
  * <p>
  * Plugin must be applied after java, java-library or groovy plugin.
+ * <p>
+ * Applies new configurations:
+ * <ul>
+ *      <li>provided</li>
+ *      <li>optional</li>
+ * </ul>
+ * Implementation configuration extends from both, so build consider all dependencies types as compile.
+ * The difference is visible only in the resulted pom. Note that compileOnly CAN'T be used instead of provided
+ * because such dependencies are not available in tests. By the same reason gradle feature variants are
+ * bad candidates for optionals.
  * <p>
  * During pom generation dependencies scope is automatically fixed for implementation (compile) dependencies
  * (gradle always set runtime for them), compileOnly dependencies are added to pom as provided.
@@ -38,6 +49,7 @@ class PomPlugin implements Plugin<Project> {
     private static final String COMPILE = 'compile'
     private static final String RUNTIME = 'runtime'
     private static final String PROVIDED = 'provided'
+    private static final String OPTIONAL = 'optional'
 
     @Override
     void apply(Project project) {
@@ -47,8 +59,27 @@ class PomPlugin implements Plugin<Project> {
             project.convention.plugins.pom = new PomConvention()
 
             project.plugins.apply(MavenPublishPlugin)
+            addConfigurations(project)
             activatePomModifications(project)
         }
+    }
+
+    /**
+     * Adds honest provided and optional implementations.
+     *
+     * @param project project
+     */
+    private void addConfigurations(Project project) {
+        ConfigurationContainer configurations = project.configurations
+        Configuration provided = configurations.create(PROVIDED)
+        provided.description =
+                'Provided works the same as implementation configuration and only affects resulted pom'
+
+        Configuration optional = configurations.create(OPTIONAL)
+        optional.description =
+                'Optional works the same as implementation configuration and only affects resulted pom'
+
+        configurations.getByName(JavaPlugin.IMPLEMENTATION_CONFIGURATION_NAME).extendsFrom(provided, optional)
     }
 
     private void activatePomModifications(Project project) {
@@ -74,7 +105,7 @@ class PomPlugin implements Plugin<Project> {
      */
     private void fixPomDependenciesScopes(Project project, Node pomXml) {
         Node dependencies = pomXml.dependencies[0]
-        Closure correctDependencies = { DependencySet deps, String requiredScope ->
+        Closure correctDependencies = { DependencySet deps, Closure action ->
             if (!dependencies || deps.empty) {
                 // avoid redundant searches (if no deps in xml or no artifacts in configuration)
                 // for example, this may arise if gradleApi() used as dependency
@@ -84,62 +115,40 @@ class PomPlugin implements Plugin<Project> {
                 deps.find { Dependency dep ->
                     dep.group == it.groupId.text() && dep.name == it.artifactId.text()
                 }
-            }.each {
-                it.scope*.value = requiredScope
-            }
+            }.each(action)
+        }
+        Closure correctScope = { DependencySet deps, String requiredScope ->
+            correctDependencies(deps) { it.scope*.value = requiredScope }
         }
 
         ConfigurationContainer configurations = project.configurations
-        correctDependencies(configurations.implementation.allDependencies, COMPILE)
+        Configuration implementation = project.configurations.implementation
+        correctScope(configurations.implementation.allDependencies, COMPILE)
 
-        // add "provided" dependencies
-        addCompileOnlyDependencies(configurations, pomXml)
+        // OPTIONAL
+        correctDependencies(
+                project.configurations.optional.allDependencies - (implementation.dependencies) as DependencySet) {
+            it.scope*.value = COMPILE
+            it.appendNode(OPTIONAL, true.toString())
+        }
+
+        // PROVIDED
+        correctScope(project.configurations.provided.allDependencies - (implementation.dependencies) as DependencySet,
+                PROVIDED)
 
         // deprecated configurations fixes: existence check is required as they will be removed in gradle 7 (or 8)
         if ((configurations as ConfigurationContainerInternal).findByName(RUNTIME) != null) {
             // not allDependencies because runtime extends compile
-            correctDependencies(configurations.runtime.dependencies, RUNTIME)
+            correctScope(configurations.runtime.dependencies, RUNTIME)
         }
         if ((configurations as ConfigurationContainerInternal).findByName(COMPILE) != null) {
-            correctDependencies(configurations.compile.allDependencies, COMPILE)
+            correctScope(configurations.compile.allDependencies, COMPILE)
         }
 
         // war plugin configurations by default added as compile, which is wrong
         project.plugins.withType(WarPlugin) {
-            correctDependencies(configurations.providedCompile.allDependencies, PROVIDED)
-            correctDependencies(configurations.providedRuntime.allDependencies, PROVIDED)
-        }
-    }
-
-    private void addCompileOnlyDependencies(ConfigurationContainer configurations, Node pomXml) {
-        Node dependencies = pomXml.dependencies[0]
-        // add compileOnly dependencies (not added by gradle)
-        boolean hasXmlDeps = dependencies != null
-        configurations.compileOnly.allDependencies.each {
-            // self-resolving dependencies like gradleApi() are not added to xml by gradle and should not
-            // be added from compileOnly too
-            if (it.group == null) {
-                return
-            }
-
-            // check for duplicate declaration (just in case of incorrect declaration)
-            if (hasXmlDeps && dependencies.dependency.find { dep ->
-                dep.groupId.text() == it.group && dep.artifactId.text() == it.name
-            }) {
-                return
-            }
-
-            // could be null if no other dependencies declared
-            Node deps = hasXmlDeps ? dependencies : pomXml.appendNode('dependencies')
-
-            Node dep = deps.appendNode('dependency')
-            dep.appendNode('groupId', it.group)
-            dep.appendNode('artifactId', it.name)
-            // dependency may be managed by spring BOM plugin and rely on dependencyManagement block in pom
-            if (it.version) {
-                dep.appendNode('version', it.version)
-            }
-            dep.appendNode('scope', PROVIDED)
+            correctScope(configurations.providedCompile.allDependencies, PROVIDED)
+            correctScope(configurations.providedRuntime.allDependencies, PROVIDED)
         }
     }
 

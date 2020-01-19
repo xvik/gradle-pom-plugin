@@ -18,6 +18,10 @@ class PomPluginTest extends AbstractTest {
             apply plugin: "ru.vyarus.pom"
         }
 
+        then: "configurations are not applied"
+        project.configurations.findByName("provided") == null
+        project.configurations.findByName("optional") == null
+
         then: "extension container is not registered"
         project.convention.plugins.pom == null
 
@@ -32,6 +36,12 @@ class PomPluginTest extends AbstractTest {
             apply plugin: "java"
             apply plugin: "ru.vyarus.pom"
         }
+
+        then: "configurations registered"
+        project.configurations.findByName("provided")
+        project.configurations.findByName("optional")
+        project.configurations.findByName(JavaPlugin.IMPLEMENTATION_CONFIGURATION_NAME).extendsFrom
+                .collect{it.name} == ["compile", "provided", "optional"]
 
         then: "extension container registered"
         project.convention.plugins.pom
@@ -49,6 +59,12 @@ class PomPluginTest extends AbstractTest {
             apply plugin: "ru.vyarus.pom"
         }
 
+        then: "configurations registered"
+        project.configurations.findByName("provided")
+        project.configurations.findByName("optional")
+        project.configurations.findByName(JavaPlugin.IMPLEMENTATION_CONFIGURATION_NAME).extendsFrom
+                .collect{it.name} == ["compile", "provided", "optional"]
+
         then: "extension container registered"
         project.convention.plugins.pom
         project.convention.plugins.pom instanceof PomConvention
@@ -64,6 +80,10 @@ class PomPluginTest extends AbstractTest {
             apply plugin: "java-library"
             apply plugin: "ru.vyarus.pom"
         }
+
+        then: "configurations registered"
+        project.configurations.findByName("provided")
+        project.configurations.findByName("optional")
 
         then: "extension container registered"
         project.convention.plugins.pom

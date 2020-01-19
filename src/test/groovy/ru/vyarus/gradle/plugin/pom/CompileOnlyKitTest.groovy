@@ -2,11 +2,11 @@ package ru.vyarus.gradle.plugin.pom
 
 /**
  * @author Vyacheslav Rusakov
- * @since 18.01.2020
+ * @since 05.08.2016
  */
-class ManualProvidedConfigKitTest extends AbstractKitTest {
+class CompileOnlyKitTest extends AbstractKitTest {
 
-    def "Check pom modifications"() {
+    def "Check compileOnly compatibility"() {
         setup:
         build("""
             plugins {
@@ -18,26 +18,15 @@ class ManualProvidedConfigKitTest extends AbstractKitTest {
             version 1.0
             description 'sample description'
 
-            configurations.compileOnly.extendsFrom configurations.create('provided')
-
-            dependencies {                                                      
-                provided 'com.google.code.findbugs:annotations:3.0.0'                
+            dependencies {
+                compileOnly 'com.google.code.findbugs:annotations:3.0.0'
+                compile 'org.javassist:javassist:3.16.1-GA'
             }
 
             publishing {
                 publications {
                     maven(MavenPublication) {
                         from components.java
-                    }
-                }
-            }
-
-            pom {
-                developers {
-                    developer {
-                        id "dev"
-                        name "Dev Dev"
-                        email "dev@gmail.com"
                     }
                 }
             }
@@ -57,7 +46,11 @@ class ManualProvidedConfigKitTest extends AbstractKitTest {
         // for debug
         println pomFile.getText()
 
-        then: "provided dependencies added"
-        pom.dependencies.'*'.find { it.artifactId.text() == 'annotations' }.scope.text() == 'provided'
+        then: "compile dependency scope corrected"
+        pom.dependencies.'*'.find { it.artifactId.text() == 'javassist' }.scope.text() == 'compile'
+
+        then: "compile only does not appear in pom"
+        !pom.dependencies.'*'.find { it.artifactId.text() == 'annotations' }
+
     }
 }

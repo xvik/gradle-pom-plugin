@@ -25,7 +25,7 @@ class GradleNativeBOMKitTest extends AbstractKitTest {
                     implementation 'junit:junit:4.11'
                 }
     
-                compileOnly 'junit:junit' 
+                provided 'junit:junit' 
                 implementation 'io.dropwizard:dropwizard-core'
             }  
 
