@@ -273,7 +273,7 @@ they will exist in pom just for consultation.
 
 Additional `provided` configuration created for provided dependencies. Gradle `implementation` extends from it
 so for gradle `provided` dependencies would be the same as `implementation` and the difference 
-will only appear in the resilted pom.
+will only appear in the resulted pom.
 
 ###### compileOnly
 
@@ -334,7 +334,7 @@ additional features.
 
 Additional `optional` configuration created for optinoal dependencies. Gradle `implementation` extends from it
 so for gradle `optional` dependencies would be the same as `implementation` and the difference 
-will only appear in the resilted pom.
+will only appear in the resulted pom.
 
 ##### Feature variants
 
@@ -394,11 +394,11 @@ why spring plugin is preferable.
 
 And, again, gradle tries to reinvent the wheel by introducing "platforms" (kind of BOM) which, I agree,
 is more powerful then simple BOM (together with gradle meta-model), but the majority of developers
-*don't need this* (dont need to know about [java-platform](https://docs.gradle.org/current/userguide/java_platform_plugin.html)
+*don't need this* (don't need to know about [java-platform](https://docs.gradle.org/current/userguide/java_platform_plugin.html)
 plugin, dont need to keep in mind maven model vs gradle metamodel).
 
-Simple things must be simple. And spring plugin is just a "maven working inside gradle", 
-which means both gradle and maven plugins will behave *the same*.
+Simple things must be simple. Spring plugin is just a "maven working inside gradle", 
+which means both gradle and maven will behave *the same*.
 
 #### Pom configuration
 
