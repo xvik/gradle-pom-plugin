@@ -1,8 +1,17 @@
+### 2.1.0 (2020-01-19)
 * Partially reverting 1.3 behavior: add `optional` and `provided` configurations because it appears that it's not possible in gradle to completely replace them
     - Now `optinoal` and `provided` would be included into `implementation` configuration (and not `compile` as before),
         but this will not change anything from usage perspective 
     - `compileOnly` dependencies no more added as provided (they are removed as before)!
     - These configurations would be available even with `java-library` plugin (in 1.3 they were not)          
+
+Changes comparing to 1.3.0:
+- Drop java 7 support
+- Require gradle 5 or above (remove stable publishing activation, assume its enabled)
+- `implementation` extends `optional` and `provided`, not `compile`
+- Support war plugin: `providedCompile` and `providedRuntime` dependencies scope changed to provided (from compile) 
+
+Versions 2.0.0 and 2.0.1 are considered now as failed experiment of relying only on gradle features
 
 ### 2.0.1 (2020-01-19) DON'T USE
 * Fix compileOnly dependencies managed by spring BOM plugin (without version) generation in pom
@@ -15,12 +24,6 @@
         because in some cases it may be important to know exact versions by looking on pom
 * (breaking) Removed optional configuration: [gradle feature variants](https://docs.gradle.org/5.6.4/userguide/feature_variants.html#header) must be used instead
 * Support war plugin: providedCompile and providedRuntime dependencies scope changed to provided (from compile) 
-
-Configurations migration:
-
-- `provided` --> `compileOnly`
-- `compile` --> `imlementation`
-- `runtime` --> `runtimeOnly`
 
 ### 1.3.0 (2018-07-09)
 * Support new (gradle 4.8) [publishing behaviour](https://docs.gradle.org/4.8/userguide/publishing_maven.html#publishing_maven:deferred_configuration):
