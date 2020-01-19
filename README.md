@@ -9,11 +9,18 @@
 Plugin fixes pom generation by [maven-publish](https://docs.gradle.org/current/userguide/publishing_maven.html) plugin
 and brings back configuration simplicity from legacy maven plugin.
 
+It will be especially useful for those who come from maven, because plugin tries to 
+bring maven's dependencies declaration simplicity. I love gradle, really do, but it seems they want to 
+do *everything not like maven* and, as a result, dependencies management and its projection
+into maven model (pom generation) is terrible (see details below). I admit that gradle 
+dependencies model is more powerful, but most of these features are not required for
+the majority of users, but simple things become complex because of them.  
+
 Features:
 
 * Fix [dependencies scopes](#dependencies) in the generated pom
-    - Include `compileOnly` dependencies with [provided scope](#provided-dependencies)
     - Fix [war](https://docs.gradle.org/current/userguide/war_plugin.html#sec:war_dependency_management) plugin provided dependencies
+* Add `provided` and `optional` configuration (in maven meaning).    
 * Add global pom configuration shortcuts (applied to all publications):
     - [pom](#pom-configuration) configuration closure to avoid maven-publish's withXml.
     - [withPomXml](#manual-pom-modification) configuration closure to be able to modify xml manually (shortcut for maven-publish's withXml)
@@ -34,6 +41,7 @@ all plugins configured.
 ##### Summary
 
 * Configuration closures: `pom`, `withPomXml`  
+* Configurations: `provided`, `optional` 
 * Enable plugins: [maven-publish](https://docs.gradle.org/current/userguide/publishing_maven.html)
 
 ### Setup
@@ -48,7 +56,7 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath 'ru.vyarus:gradle-pom-plugin:2.0.1'
+        classpath 'ru.vyarus:gradle-pom-plugin:2.1.0'
     }
 }
 apply plugin: 'ru.vyarus.pom'
@@ -58,7 +66,7 @@ OR
 
 ```groovy
 plugins {
-    id 'ru.vyarus.pom' version '2.0.1'
+    id 'ru.vyarus.pom' version '2.1.0'
 }
 ```
 
@@ -68,7 +76,7 @@ Plugin compiled for java 8, compatible with java 11
 
 Gradle | Version
 --------|-------
-5.x     | 2.0.1
+5.x     | 2.1.0
 4.6     | [1.3.0](https://github.com/xvik/gradle-pom-plugin/tree/1.3.0)
 older   | [1.2.0](https://github.com/xvik/gradle-pom-plugin/tree/1.2.0)
 
@@ -151,10 +159,15 @@ Maven scope | Gradle configuration
 ------------| ----------------
 compile     | implementation, api
 runtime     | runtimeOnly
-provided    | compileOnly
-optional    | [gradle feature](#optional-dependencies)
+provided    | provided  (**not** compileOnly!)
+optional    | optional, [feature variants](#feature-variants)
 
 Also, see [good article](https://reflectoring.io/maven-scopes-gradle-configurations/) describing maven/gradle scope analogies.
+
+`compileOnly` should be used only for really compile-time additions like nullability annotations.
+
+`api` appear only when `java-library` plugin is enabled. Read [this article](https://reflectoring.io/gradle-pollution-free-dependencies/) 
+to better understand api-implementation difference for gradle (or simply use `implementaion` by default). 
 
 #### Dependencies
 
@@ -175,8 +188,6 @@ Note: in context of gradle `java-library` plugin, both `api` and `implementation
 because there is only build time difference (it's a gradle optimization) between configurations and module still need `implementation` dependencies.
 For the end user they both are usual transitive dependencies and must have compile scope. 
 
-Read [this article](https://reflectoring.io/gradle-pollution-free-dependencies/) to better understand api-implementation difference for gradle.
-
 For example:
 
 ```groovy
@@ -186,7 +197,8 @@ plugins {
 dependencies {    
     implementation 'com.foo:dep-compile:1.0'
     runtimeOnly 'com.foo:dep-runtime:1.0'
-    compileOnly 'com.foo:dep-provided:1.0' 
+    provided 'com.foo:dep-provided:1.0'
+    optional 'com.foo:dep-optional:1.0' 
 }
 ```
 
@@ -211,6 +223,13 @@ Will result in:
         <artifactId>dep-provided</artifactId>
         <version>1.0</version>
         <scope>provided</scope>
+    </dependency>
+    <dependency>
+        <groupId>com.foo</groupId>
+        <artifactId>dep-optional</artifactId>
+        <version>1.0</version>
+        <scope>compile</scope>
+        <optinoal>true</optinoal>
     </dependency>
 </dependencies>
 ```
@@ -248,36 +267,54 @@ Will produce:
 
 ##### Provided dependencies
 
-`compileOnly` is the [official gradle analog](https://blog.gradle.org/introducing-compile-only-dependencies)
-for maven `provided` scope. 
+Provided dependencies assumed to be present in target environment or already exists in 
+projects consuming library. Provided dependencies will not be loaded as transitive dependencies,
+they will exist in pom just for consultation.
 
-But, by default, these dependencies are not added to the generated pom. This is not correct because
-it become impossible to validate library version, used for compilation by looking at pom
-(and it may be very important in some cases).  
+Additional `provided` configuration created for provided dependencies. Gradle `implementation` extends from it
+so for gradle `provided` dependencies would be the same as `implementation` and the difference 
+will only appear in the resilted pom.
 
-That's why plugin adds all `compileOnly` dependencies with `provided` scope: for consultation.
+###### compileOnly
 
-###### Provided scope alias
+Gradle states that  `compileOnly` is the [official gradle analog](https://blog.gradle.org/introducing-compile-only-dependencies)
+for maven `provided` scope. But it's not: first of all, gradle does not add such dependencies to pom at all.
+More importantly, `compileOnly` dependencies are *not visible* in other scopes. So, for example,
+to use these dependencies in test, you'll have to add them *again* in test scope.
 
-If `compileOnly` name is not good enough for you, you can declare your own name for provided configuration:
+The only application for `compileOnly` scope is compile-time libraries, like nullability annotations.     
+This *is not* provided scope.
+
+Plugin does not do anything with `compileOnly`: these dependencies will not be present in the resulted pom.
+
+###### Make other scopes as provided
+
+If you already have some other scope and want to identify this dependencies in pom as provided then:
 
 ```groovy
-configurations.compileOnly.extendsFrom configurations.create('provided')
+configurations.provided.extendsFrom configurations.apt
 
-dependencies {                                                      
-    provided 'com.google.code.findbugs:annotations:3.0.0'                
+dependencies {
+    implementation 'com.google.code.gson:gson:2.6.2'
+
+    apt 'org.immutables:gson:2.1.19'
 }
-```
+```      
 
-Here new configuration `provided` created and `compileOnly` extends it. This trick works because pom plugin 
-adds not only `compileOnly` dependencies, but also all super configurations: 
+Suppose `apt` configuration was added by some plugin. Now, apt dependencies will be marked provided in the resulted pom:
 
 ```xml
- <dependencies>
+ <dependencies> 
     <dependency>
-        <groupId>com.google.code.findbugs</groupId>
-        <artifactId>annotations</artifactId>
-        <version>3.0.0</version>
+        <groupId>com.google.code.gson</groupId>
+        <artifactId>gson</artifactId>
+        <version>2.6.2</version>
+        <scope>compile</scope>
+    </dependency>
+    <dependency>
+        <groupId>org.immutables</groupId>
+        <artifactId>gson</artifactId>
+        <version>2.1.19</version>
         <scope>provided</scope>
     </dependency>
 </dependencies>
@@ -292,7 +329,17 @@ resulted war, but contained in the generated pom as `compile`. Plugin fixes such
 
 ##### Optional dependencies
 
-Optional dependencies may be declared with [gradle feature variants](https://docs.gradle.org/5.6.4/userguide/feature_variants.html#header):
+Optional dependencies supposed to be used for not required dependencies, for exampel, activating
+additional features.
+
+Additional `optional` configuration created for optinoal dependencies. Gradle `implementation` extends from it
+so for gradle `optional` dependencies would be the same as `implementation` and the difference 
+will only appear in the resilted pom.
+
+##### Feature variants
+
+Gradle states that native replacement for optional dependencies is 
+[gradle feature variants](https://docs.gradle.org/5.6.4/userguide/feature_variants.html#header). For example:
 
 ```groovy
 java {
@@ -318,7 +365,12 @@ dependencies {
 </dependencies>
 ```
 
-This is *native gradle behaviour*: showing just for reference.
+Looks good, but these dependencies *will not* work as you expected from optionals:
+these dependencies will not be visible in other scopes. So if you need to test this behavior
+then you'll have to add another dependency in test scope. 
+
+Probably, there is a way to workaround this, but, still, simple things must be done simple, so
+`optional` configuration would just do what the majority of library developers need.
 
 #### Usage with spring dependency-management plugin
 
@@ -332,12 +384,21 @@ Do not disable [plugin's pom modifications](https://github.com/spring-gradle-plu
 because without it dependencies in pom file will be without version. Plugin will generate dependencyManagement pom section, which will make
 pom dependencies without version valid.
 
-Extra: [this article](https://www.nexocode.com/blog/posts/spring-dependencies-in-gradle/) describes replacing spring 
+##### Why not gradle BOM support
+
+[This article](https://www.nexocode.com/blog/posts/spring-dependencies-in-gradle/) describes replacing spring 
 plugin with the core gradle features. Even if I'm not agree with this, examples are very good and may be helpful.
-Keep in mind that with spring plugin you may generate your own BOM quite easily (for example, [here](https://github.com/xvik/dropwizard-guicey) I can use project's generated pom as BOM), 
-whereas in gradle you'll have to use additional [java-platform](https://docs.gradle.org/current/userguide/java_platform_plugin.html) plugin
-and create separate module only for BOM declaration (you can see example of spring plugin usage in multi-module project [here](https://github.com/xvik/dropwizard-guicey-ext),
-and yes it also extracts BOM to submodule, but it's not a declaration separation - it's just a publication of root project dependencies configuration).
+
+Read [here](https://github.com/spring-gradle-plugins/dependency-management-plugin/issues/211#issuecomment-387362326)
+why spring plugin is preferable.
+
+And, again, gradle tries to reinvent the wheel by introducing "platforms" (kind of BOM) which, I agree,
+is more powerful then simple BOM (together with gradle meta-model), but the majority of developers
+*don't need this* (dont need to know about [java-platform](https://docs.gradle.org/current/userguide/java_platform_plugin.html)
+plugin, dont need to keep in mind maven model vs gradle metamodel).
+
+Simple things must be simple. And spring plugin is just a "maven working inside gradle", 
+which means both gradle and maven plugins will behave *the same*.
 
 #### Pom configuration
 
