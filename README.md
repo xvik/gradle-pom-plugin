@@ -177,7 +177,7 @@ Plugin fixes dependencies scopes in the generated pom:
 ---------------|-----------|----|---
  api       | compile   | compile |  ony with [java-library](https://docs.gradle.org/current/userguide/java_library_plugin.html#sec:java_library_separation) plugin 
  implementation | **compile** |  runtime |   
- compileOnly       | **provided**   | dependencies not added |   
+ compileOnly       |  -   | dependencies not added |   
  runtimeOnly        | runtime | runtime |    
  *compile*   | compile | compile |  *deprecated!* avoid using
  *runtime*   | **runtime**  | compile | *deprecated!* avoid using
