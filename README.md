@@ -7,14 +7,15 @@
 ### About
 
 Plugin fixes pom generation by [maven-publish](https://docs.gradle.org/current/userguide/publishing_maven.html) plugin
-and brings back configuration simplicity from legacy maven plugin.
+and brings back configuration simplicity.
 
 It will be especially useful for those who come from maven, because plugin tries to 
 bring maven's dependencies declaration simplicity. I love gradle, really do, but it seems they want to 
 do *everything not like maven* and, as a result, dependencies management and its projection
-into maven model (pom generation) is terrible (see details below). I admit that gradle 
-dependencies model is more powerful, but most of these features are not required for
-the majority of users, but simple things become complex because of them.  
+into maven model (pom generation) is overcomplicated (see details below). 
+
+I admit that gradle dependencies model is more powerful, but it makes even simple use-cases much more complex 
+then they should be. Plugin tries to bring back (maven) simplicity.  
 
 Features:
 
@@ -28,7 +29,7 @@ Features:
     - Gradle [java-library](https://docs.gradle.org/current/userguide/java_library_plugin.html) plugin
     - Spring [dependency-management](#usage-with-spring-dependency-management-plugin) plugin
 
-If you develop java or groovy library you may look to [java-lib plugin](https://github.com/xvik/gradle-java-lib-plugin)
+If you develop `java` or `groovy` library you may look to [java-lib plugin](https://github.com/xvik/gradle-java-lib-plugin)
 which already includes `pom` plugin and configures maven publication for you 
 (don't confuse with gradle's `java-library` plugin which only declares `api` and `implementation` configurations).
 
