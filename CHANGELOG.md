@@ -1,3 +1,9 @@
+* Java plugin not required for activation anymore: main features are activated with 
+  maven-publish plugin (as before, maven-publih registered automatically for java plugin)
+* Support usage with java-platform plugin (used for BOM declaration):
+    - maven-publish plugin would be activated automatically
+    - no additional configurations created (and no scopes auto-fixing applied)
+
 ### 2.1.0 (2020-01-19)
 * Partially reverting 1.3 behavior: add `optional` and `provided` configurations because it appears that it's not possible in gradle to completely replace them
     - Now `optinoal` and `provided` would be included into `implementation` configuration (and not `compile` as before),

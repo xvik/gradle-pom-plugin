@@ -19,7 +19,7 @@ import ru.vyarus.gradle.plugin.pom.xml.XmlMerger
 /**
  * Pom plugin "fixes" maven-publish plugin pom generation: set correct scopes for dependencies.
  * <p>
- * Plugin must be applied after java, java-library or groovy plugin.
+ * Plugin must be applied after java, java-library, groovy plugin or java-platform (used for BOM).
  * <p>
  * Applies new configurations:
  * <ul>
@@ -39,6 +39,9 @@ import ru.vyarus.gradle.plugin.pom.xml.XmlMerger
  * <p>
  * Plugin adds simplified pom configuration extension. Using pom closure in build new sections could be added
  * to resulted pom. If multiple maven publications configured, pom modification will be applied to all of them.
+ * <p>
+ * NOTE: When used with java-platform no additional configurations applied and no automatic scopes modifications
+ * applied to generated pom (user defined modifications (pom and withPomXml blocks) would work as expected).
  *
  * @author Vyacheslav Rusakov
  * @since 04.11.2015
@@ -53,13 +56,23 @@ class PomPlugin implements Plugin<Project> {
 
     @Override
     void apply(Project project) {
-        // activated only when java plugin is enabled
+        // activate maven-publish automatically for java modules
         project.plugins.withType(JavaPlugin) {
+            project.plugins.apply(MavenPublishPlugin)
+        }
+        // activate maven-publish automatically for java-platform modules (BOM declaration)
+        project.plugins.withId('java-platform') {
+            project.plugins.apply(MavenPublishPlugin)
+        }
+        // in case when java plugin is not used and maven plugin activated manually
+        // (case: using java-platform for BOM publication)
+        project.plugins.withType(MavenPublishPlugin) {
             // extensions mechanism not used because we need free closure for pom xml modification
             project.convention.plugins.pom = new PomConvention()
-
-            project.plugins.apply(MavenPublishPlugin)
-            addConfigurations(project)
+            // additional configurations are not useful for BOM
+            project.plugins.withType(JavaPlugin) {
+                addConfigurations(project)
+            }
             activatePomModifications(project)
         }
     }
@@ -90,7 +103,10 @@ class PomPlugin implements Plugin<Project> {
             project.afterEvaluate {
                 pom.withXml {
                     Node pomXml = asNode()
-                    fixPomDependenciesScopes(project, pomXml)
+                    // do nothing for BOM
+                    project.plugins.withType(JavaPlugin) {
+                        fixPomDependenciesScopes(project, pomXml)
+                    }
                     applyUserPom(project, pomXml)
                 }
             }
@@ -122,18 +138,19 @@ class PomPlugin implements Plugin<Project> {
         }
 
         ConfigurationContainer configurations = project.configurations
-        Configuration implementation = project.configurations.implementation
-        correctScope(configurations.implementation.allDependencies, COMPILE)
+        Configuration implementation = configurations.implementation
+
+        correctScope(implementation.allDependencies, COMPILE)
 
         // OPTIONAL
         correctDependencies(
-                project.configurations.optional.allDependencies - (implementation.dependencies) as DependencySet) {
+                configurations.optional.allDependencies - (implementation.dependencies) as DependencySet) {
             it.scope*.value = COMPILE
             it.appendNode(OPTIONAL, true.toString())
         }
 
         // PROVIDED
-        correctScope(project.configurations.provided.allDependencies - (implementation.dependencies) as DependencySet,
+        correctScope(configurations.provided.allDependencies - (implementation.dependencies) as DependencySet,
                 PROVIDED)
 
         // deprecated configurations fixes: existence check is required as they will be removed in gradle 7 (or 8)
