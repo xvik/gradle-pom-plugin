@@ -56,6 +56,6 @@ class PlatformKitTest extends AbstractKitTest {
         pom.dependencyManagement.dependencies.'*'.find { it.artifactId.text() == 'guicey-bom' }.scope.text() == 'import'
         def dep = pom.dependencyManagement.dependencies.'*'.find { it.artifactId.text() == 'pf4j' }
         dep != null
-        dep.scope == null || dep.scope.text() == 'compile' // depends on gradle version
+        !dep.scope || dep.scope.text() == 'compile' // depends on gradle version
     }
 }

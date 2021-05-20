@@ -9,15 +9,9 @@
     "projectVersion": "0.1.0",
     "projectDesc": "Gradle POM plugin",
     "pluginPortalDesc": "Extends maven-publish plugin abilities",
-    "targetJava": "1.7",
     "pluginPortalTags": "java, groovy, maven, pom",
-    "mirrorToJcenter": true,
     "pluginPortalUseCustomGroup": true,
-    "bintrayUser": "vyarus",
-    "bintrayRepo": "xvik",
-    "bintrayTags": "gradle, java, groovy, maven, pom",
-    "bintraySignFiles": true,
-    "mavenCentralSync": true,
-    "usedGeneratorVersion": "1.8.0"
+    "usedGeneratorVersion": "2.0.0",
+    "centralPublish": true
   }
 }

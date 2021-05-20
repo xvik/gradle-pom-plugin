@@ -2,9 +2,8 @@ package ru.vyarus.gradle.plugin.pom
 
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
-import org.junit.Rule
-import org.junit.rules.TemporaryFolder
 import spock.lang.Specification
+import spock.lang.TempDir
 
 /**
  * @author Vyacheslav Rusakov 
@@ -12,12 +11,12 @@ import spock.lang.Specification
  */
 abstract class AbstractKitTest extends Specification {
 
-    @Rule
-    final TemporaryFolder testProjectDir = new TemporaryFolder()
+    boolean debug
+    @TempDir File testProjectDir
     File buildFile
 
     def setup() {
-        buildFile = testProjectDir.newFile('build.gradle')
+        buildFile = file('build.gradle')
         // jacoco coverage support
         fileFromClasspath('gradle.properties', 'testkit-gradle.properties')
     }
@@ -27,7 +26,7 @@ abstract class AbstractKitTest extends Specification {
     }
 
     File file(String path) {
-        new File(testProjectDir.root, path)
+        new File(testProjectDir, path)
     }
 
     File fileFromClasspath(String toFile, String source) {
@@ -37,23 +36,28 @@ abstract class AbstractKitTest extends Specification {
     }
 
     /**
-     * Allow debug TestKit vm execution. After vm start it will wait for debug connection and continue processing after.
-     * (the same effect could be achieved with GradleRunner.withDebug(true) method)
+     * Enable it and run test with debugger (no manual attach required). Not always enabled to speed up tests during
+     * normal execution.
      */
     def debug() {
-        file('gradle.properties') << "\norg.gradle.jvmargs=-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=8000"
+        debug = true
     }
 
     String projectName() {
-        return testProjectDir.root.getName()
+        return testProjectDir.getName()
+    }
+
+    GradleRunner gradle(File root, String... commands) {
+        GradleRunner.create()
+                .withProjectDir(root)
+                .withArguments((commands + ['--stacktrace']) as String[])
+                .withPluginClasspath()
+                .withDebug(debug)
+                .forwardOutput()
     }
 
     GradleRunner gradle(String... commands) {
-        GradleRunner.create()
-                .withProjectDir(testProjectDir.root)
-                .withArguments((commands + ['--stacktrace']) as String[])
-                .withPluginClasspath()
-                .forwardOutput()
+        gradle(testProjectDir, commands)
     }
 
     BuildResult run(String... commands) {
@@ -70,5 +74,11 @@ abstract class AbstractKitTest extends Specification {
 
     BuildResult runFailedVer(String gradleVersion, String... commands) {
         return gradle(commands).withGradleVersion(gradleVersion).buildAndFail()
+    }
+
+    protected String unifyString(String input) {
+        return input
+                // cleanup win line break for simpler comparisons
+                .replace("\r", '')
     }
 }

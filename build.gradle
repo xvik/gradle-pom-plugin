@@ -1,27 +1,27 @@
 plugins {
-    id 'com.gradle.build-scan' version '3.0'
-    id 'com.gradle.plugin-publish' version '0.10.1'
+    id 'com.gradle.plugin-publish' version '0.14.0'
     id 'java-gradle-plugin'
     id 'groovy'
     id 'jacoco'
+    id 'signing'
     id 'net.researchgate.release' version '2.8.1'
-    id 'ru.vyarus.quality' version '4.0.0'
-    id 'com.jfrog.bintray' version '1.8.4'
+    id 'ru.vyarus.quality' version '4.6.0'
+    id 'io.github.gradle-nexus.publish-plugin' version '1.1.0'
     id 'ru.vyarus.java-lib' version '2.1.0'
     id 'ru.vyarus.github-info' version '1.2.0'
-    id 'com.github.ben-manes.versions' version '0.27.0'
-    id "pl.droidsonroids.jacoco.testkit" version "1.0.5"
+    id 'com.github.ben-manes.versions' version '0.38.0'
+    id "pl.droidsonroids.jacoco.testkit" version "1.0.8"
 }
 
 sourceCompatibility = 1.8
 
 wrapper {
-    gradleVersion = '5.6.4'
+    gradleVersion = '6.9'
 }
 
-repositories { jcenter(); gradlePluginPortal() }
+repositories { mavenCentral(); gradlePluginPortal() }
 dependencies {
-    testCompile('org.spockframework:spock-core:1.2-groovy-2.5') {
+    testImplementation('org.spockframework:spock-core:2.0-groovy-2.5') {
         exclude group: 'org.codehaus.groovy'
     }
 }
@@ -44,30 +44,22 @@ pom {
     }
 }
 
-bintray {
-    user = findProperty('bintrayUser')
-    key = findProperty('bintrayKey')
-    publications = ['maven']
-    dryRun = false
-    publish = true
-    pkg {
-        repo = 'xvik'
-        name = project.name
-        desc = project.description
-        labels = ['gradle', 'java', 'groovy', 'maven', 'pom']
-        publicDownloadNumbers = true
-        version {
-            gpg {
-                sign = true
-                passphrase = findProperty('gpgPassphrase')
-            }
-            mavenCentralSync {
-                sync = true
-                user = findProperty('sonatypeUser')
-                password = findProperty('sonatypePassword')
-            }
+nexusPublishing {
+    repositories {
+        sonatype {
+            username = findProperty('sonatypeUser')
+            password = findProperty('sonatypePassword')
         }
     }
+}
+
+signing {
+    // https://docs.gradle.org/current/userguide/signing_plugin.html#sec:signatory_credentials
+    sign publishing.publications.maven
+}
+
+tasks.withType(Sign).configureEach {
+    onlyIf { !version.endsWith("SNAPSHOT") }
 }
 
 gradlePlugin {
@@ -89,16 +81,25 @@ pluginBundle {
     }
 }
 
+// disable gradle metadata publishing (because it confuse a lot)
+tasks.withType(GenerateModuleMetadata).configureEach {
+    enabled = false
+}
+
 afterReleaseBuild {
-    dependsOn = [bintrayUpload, publishPlugins]
+    dependsOn = [
+            'publishMavenPublicationToSonatypeRepository',
+            'closeAndReleaseSonatypeStagingRepository',
+            publishPlugins]
     doLast {
         logger.warn "RELEASED $project.group:$project.name:$project.version"
     }
 }
 
 test {
+    useJUnitPlatform()
     testLogging {
-        events 'skipped', 'failed', 'standard_error'
+        events 'skipped', 'failed'
         exceptionFormat 'full'
     }
     maxHeapSize = '512m'
@@ -109,9 +110,3 @@ test {
 
 dependencyUpdates.revision = 'release'
 jacocoTestReport.reports.xml.enabled = true
-
-buildScan {
-    termsOfServiceUrl = 'https://gradle.com/terms-of-service'
-    termsOfServiceAgree = 'yes'
-    publishOnFailure()
-}

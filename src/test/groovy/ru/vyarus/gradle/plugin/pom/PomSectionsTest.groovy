@@ -266,6 +266,10 @@ class PomSectionsTest extends AbstractKitTest {
                 }
             }
 
+            tasks.withType(GenerateModuleMetadata).configureEach {
+                enabled = false
+            }
+
             model {
                 tasks.generatePomFileForMavenPublication {
                     destination = file("\$buildDir/generated-pom.xml")
@@ -504,11 +508,10 @@ class PomSectionsTest extends AbstractKitTest {
     </profile>
   </profiles>
 </project>
-""".replaceAll("\r", "") == pomFile.getText()
-                .replaceAll(getTestProjectDir().root.canonicalPath.replaceAll("\\\\", "\\\\\\\\"), "/tmp/junit4041206865739771722")
+""" == unifyString(pomFile.getText()
+                .replace(testProjectDir.canonicalPath, "/tmp/junit4041206865739771722")
                 .replaceAll("\\\\", "/")
-                .replaceAll(testProjectDir.getRoot().name, "junit4041206865739771722")
-                .replaceAll("\r", "")
+                .replace(testProjectDir.name, "junit4041206865739771722"))
     }
 
 }
