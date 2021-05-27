@@ -3,6 +3,13 @@
 * Support usage with java-platform plugin (used for BOM declaration):
     - maven-publish plugin would be activated automatically
     - no additional configurations created (and no scopes auto-fixing applied)
+* New configuration closure: `pomGeneration`
+    - disableScopesCorrection() - disables scope corrections applied by the plugin (to see native behaviour)
+    - forceVersions() - always put dependency version even when boms used (gradle platforms)
+    - removeDependencyManagement() - removes dependencyManagement section from pom (generated for used platforms)
+        automatically forces versions (otherwise pom would become invalid).
+        Option assumed to be used with gradle platforms to not "leak" platform into generated poms.
+        Compatible with spring dependency management plugin
 
 ### 2.1.0 (2020-01-19)
 * Partially reverting 1.3 behavior: add `optional` and `provided` configurations because it appears that it's not possible in gradle to completely replace them

@@ -100,6 +100,94 @@ class PomPluginKitTest extends AbstractKitTest {
         pom.description.text() == 'sample description'
     }
 
+    def "Check pom modifications disabled"() {
+        setup:
+        build("""
+            plugins {
+                id 'java'
+                id 'ru.vyarus.pom'
+            }
+
+            group 'ru.vyarus'
+            version 1.0
+            description 'sample description'
+
+            dependencies {                                         
+                // compile
+                implementation 'org.javassist:javassist:3.16.1-GA'         
+                provided 'com.google.code.findbugs:annotations:3.0.0'
+                // runtime
+                runtimeOnly 'ru.vyarus:guice-ext-annotations:1.1.1'  
+                optional 'ru.vyarus:generics-resolver:2.0.0'
+                // disappear    
+                compileOnly 'junit:junit:4.12'
+
+                // deprecated
+                compile 'ru.vyarus:gradle-pom-plugin:1.0.0'
+                runtime 'ru.vyarus:gradle-quality-plugin:2.0.0'
+            }
+
+            publishing {
+                publications {
+                    maven(MavenPublication) {
+                        from components.java
+                    }
+                }
+            }
+
+            pomGeneration {
+                disableScopesCorrection()
+            }
+
+            pom {
+                developers {
+                    developer {
+                        id "dev"
+                        name "Dev Dev"
+                        email "dev@gmail.com"
+                    }
+                }
+            }
+
+            model {
+                tasks.generatePomFileForMavenPublication {
+                    destination = file("\$buildDir/generated-pom.xml")
+                }
+            }
+        """)
+
+        when: "run pom task"
+        run('generatePomFileForMavenPublication')
+
+        def pomFile = file("build/generated-pom.xml")
+        def pom = new XmlParser().parse(pomFile)
+        // for debug
+        println pomFile.getText()
+
+        then: "implementation dependency scope not corrected"
+        pom.dependencies.'*'.find { it.artifactId.text() == 'javassist' }.scope.text() == 'runtime'
+
+        then: "provided dependency scope corrected"
+        pom.dependencies.'*'.find { it.artifactId.text() == 'annotations' }.scope.text() == 'provided'
+
+        then: "runtimeOnly dependency scope not correct"
+        pom.dependencies.'*'.find { it.artifactId.text() == 'guice-ext-annotations' }.scope.text() == 'runtime'
+
+        then: "optional dependency scope corrected"
+        def opt = pom.dependencies.'*'.find { it.artifactId.text() == 'generics-resolver' }
+        opt.scope.text() == 'compile'
+        opt.optional.text() == 'true'
+
+        then: "compileOnly dependencies are removed from pom"
+        pom.dependencies.'*'.find { it.artifactId.text() == 'junit' } == null
+
+        then: "compile dependency scope not corrected"
+        pom.dependencies.'*'.find { it.artifactId.text() == 'gradle-pom-plugin' }.scope.text() == 'compile'
+
+        then: "runtime dependency scope not corrected"
+        pom.dependencies.'*'.find { it.artifactId.text() == 'gradle-quality-plugin' }.scope.text() == 'compile'
+    }
+
     def "Check pom defaults override"() {
         setup:
         build("""

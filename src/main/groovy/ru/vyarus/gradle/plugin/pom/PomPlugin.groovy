@@ -43,6 +43,7 @@ import ru.vyarus.gradle.plugin.pom.xml.XmlMerger
  * NOTE: When used with java-platform no additional configurations applied and no automatic scopes modifications
  * applied to generated pom (user defined modifications (pom and withPomXml blocks) would work as expected).
  *
+ * @see PomExtension use `pomGeneration` closure to configure pom generation behaviour
  * @author Vyacheslav Rusakov
  * @since 04.11.2015
  */
@@ -69,6 +70,8 @@ class PomPlugin implements Plugin<Project> {
         project.plugins.withType(MavenPublishPlugin) {
             // extensions mechanism not used because we need free closure for pom xml modification
             project.convention.plugins.pom = new PomConvention()
+            // used to configure applied pom modifications
+            project.extensions.create('pomGeneration', PomExtension)
             // additional configurations are not useful for BOM
             project.plugins.withType(JavaPlugin) {
                 addConfigurations(project)
@@ -101,11 +104,31 @@ class PomPlugin implements Plugin<Project> {
         publishing.publications.withType(MavenPublication) {
             // important to apply after possible user modifications because otherwise duplicate tags will arise
             project.afterEvaluate {
+                PomExtension extension = project.extensions.findByType(PomExtension)
+                if (extension.forcedVersions) {
+                    // Recommended way: see https://docs.gradle.org/current/userguide/publishing_maven.html
+                    // #publishing_maven:resolved_dependencies
+                    versionMapping {
+                        usage('java-api') {
+                            fromResolutionOf('runtimeClasspath')
+                        }
+                        usage('java-runtime') {
+                            fromResolutionResult()
+                        }
+                    }
+                }
                 pom.withXml {
                     Node pomXml = asNode()
                     // do nothing for BOM
                     project.plugins.withType(JavaPlugin) {
                         fixPomDependenciesScopes(project, pomXml)
+                    }
+                    if (extension.removedDependencyManagement) {
+                        // remove dependenciesManagementSection
+                        NodeList dependencyManagement = pomXml.dependencyManagement
+                        if (!dependencyManagement.empty) {
+                            pomXml.remove(dependencyManagement.first())
+                        }
                     }
                     applyUserPom(project, pomXml)
                 }
@@ -119,6 +142,7 @@ class PomPlugin implements Plugin<Project> {
      * @param project project instance
      * @param pomXml pom xml
      */
+    @SuppressWarnings('MethodSize')
     private void fixPomDependenciesScopes(Project project, Node pomXml) {
         Node dependencies = pomXml.dependencies[0]
         Closure correctDependencies = { DependencySet deps, Closure action ->
@@ -140,7 +164,12 @@ class PomPlugin implements Plugin<Project> {
         ConfigurationContainer configurations = project.configurations
         Configuration implementation = configurations.implementation
 
-        correctScope(implementation.allDependencies, COMPILE)
+        // corrections may be disabled but optional and provided configurations have to be always "corrected"
+        boolean fixScopes = !project.extensions.findByType(PomExtension).disabledScopesCorrection
+
+        if (fixScopes) {
+            correctScope(implementation.allDependencies, COMPILE)
+        }
 
         // OPTIONAL
         correctDependencies(
@@ -153,19 +182,21 @@ class PomPlugin implements Plugin<Project> {
         correctScope(configurations.provided.allDependencies - (implementation.dependencies) as DependencySet,
                 PROVIDED)
 
-        // deprecated configurations fixes: existence check is required as they will be removed in gradle 7 (or 8)
-        if ((configurations as ConfigurationContainerInternal).findByName(RUNTIME) != null) {
-            // not allDependencies because runtime extends compile
-            correctScope(configurations.runtime.dependencies, RUNTIME)
-        }
-        if ((configurations as ConfigurationContainerInternal).findByName(COMPILE) != null) {
-            correctScope(configurations.compile.allDependencies, COMPILE)
-        }
+        if (fixScopes) {
+            // deprecated configurations fixes: existence check is required as they will be removed in gradle 7 (or 8)
+            if ((configurations as ConfigurationContainerInternal).findByName(RUNTIME) != null) {
+                // not allDependencies because runtime extends compile
+                correctScope(configurations.runtime.dependencies, RUNTIME)
+            }
+            if ((configurations as ConfigurationContainerInternal).findByName(COMPILE) != null) {
+                correctScope(configurations.compile.allDependencies, COMPILE)
+            }
 
-        // war plugin configurations by default added as compile, which is wrong
-        project.plugins.withType(WarPlugin) {
-            correctScope(configurations.providedCompile.allDependencies, PROVIDED)
-            correctScope(configurations.providedRuntime.allDependencies, PROVIDED)
+            // war plugin configurations by default added as compile, which is wrong
+            project.plugins.withType(WarPlugin) {
+                correctScope(configurations.providedCompile.allDependencies, PROVIDED)
+                correctScope(configurations.providedRuntime.allDependencies, PROVIDED)
+            }
         }
     }
 

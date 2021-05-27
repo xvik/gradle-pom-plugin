@@ -25,6 +25,9 @@ class PomPluginTest extends AbstractTest {
         then: "extension container is not registered"
         project.convention.plugins.pom == null
 
+        then: "extension is not registered"
+        project.extensions.findByName('pomGeneration') == null
+
         then: "maven publish plugin not activated"
         project.plugins.findPlugin(MavenPublishPlugin) == null
     }
@@ -46,6 +49,10 @@ class PomPluginTest extends AbstractTest {
         then: "extension container registered"
         project.convention.plugins.pom
         project.convention.plugins.pom instanceof PomConvention
+
+        then: "extension registered"
+        project.extensions.findByName('pomGeneration')
+        project.extensions.findByName('pomGeneration') instanceof PomExtension
 
         then: "maven publish plugin activated"
         project.plugins.findPlugin(MavenPublishPlugin)
@@ -69,6 +76,10 @@ class PomPluginTest extends AbstractTest {
         project.convention.plugins.pom
         project.convention.plugins.pom instanceof PomConvention
 
+        then: "extension registered"
+        project.extensions.findByName('pomGeneration')
+        project.extensions.findByName('pomGeneration') instanceof PomExtension
+
         then: "maven publish plugin activated"
         project.plugins.findPlugin(MavenPublishPlugin)
     }
@@ -88,6 +99,10 @@ class PomPluginTest extends AbstractTest {
         then: "extension container registered"
         project.convention.plugins.pom
         project.convention.plugins.pom instanceof PomConvention
+
+        then: "extension registered"
+        project.extensions.findByName('pomGeneration')
+        project.extensions.findByName('pomGeneration') instanceof PomExtension
 
         then: "maven publish plugin activated"
         project.plugins.findPlugin(MavenPublishPlugin)
