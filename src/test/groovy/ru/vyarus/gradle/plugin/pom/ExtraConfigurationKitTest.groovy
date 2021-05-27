@@ -24,7 +24,7 @@ class ExtraConfigurationKitTest extends AbstractKitTest {
 
             configurations.provided.extendsFrom configurations.apt
 
-            repositories { jcenter() }
+            repositories { mavenCentral() }
             dependencies {
                 implementation 'com.google.code.gson:gson:2.6.2'
 

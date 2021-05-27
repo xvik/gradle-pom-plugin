@@ -100,7 +100,7 @@ class DependencyManagementPluginKitTest extends AbstractKitTest {
                 }
             }
 
-            repositories {jcenter()}
+            repositories {mavenCentral()}
         """)
 
         when: "run pom task"
@@ -133,7 +133,7 @@ class DependencyManagementPluginKitTest extends AbstractKitTest {
             version 1.0
             description 'sample description'     
 
-            repositories { jcenter(); mavenCentral(); mavenLocal() }
+            repositories { mavenCentral(); mavenLocal() }
             dependencyManagement {                   
                 dependencies {
                     dependency "junit:junit:4.12"

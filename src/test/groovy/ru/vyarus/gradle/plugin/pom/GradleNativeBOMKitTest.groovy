@@ -18,7 +18,7 @@ class GradleNativeBOMKitTest extends AbstractKitTest {
             version 1.0
             description 'sample description'     
 
-            repositories { jcenter(); mavenCentral(); mavenLocal() }
+            repositories { mavenCentral(); mavenLocal() }
             dependencies {        
                 implementation platform('io.dropwizard:dropwizard-dependencies:2.0.0')
                 constraints {
