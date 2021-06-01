@@ -121,15 +121,9 @@ class PomPlugin implements Plugin<Project> {
                     Node pomXml = asNode()
                     // do nothing for BOM
                     project.plugins.withType(JavaPlugin) {
-                        fixPomDependenciesScopes(project, pomXml)
+                        fixPomDependenciesScopes(project, extension, pomXml)
                     }
-                    if (extension.removedDependencyManagement) {
-                        // remove dependenciesManagementSection
-                        NodeList dependencyManagement = pomXml.dependencyManagement
-                        if (!dependencyManagement.empty) {
-                            pomXml.remove(dependencyManagement.first())
-                        }
-                    }
+                    fixDependencyManagement(extension, pomXml)
                     applyUserPom(project, pomXml)
                 }
             }
@@ -143,7 +137,7 @@ class PomPlugin implements Plugin<Project> {
      * @param pomXml pom xml
      */
     @SuppressWarnings('MethodSize')
-    private void fixPomDependenciesScopes(Project project, Node pomXml) {
+    private void fixPomDependenciesScopes(Project project, PomExtension extension, Node pomXml) {
         Node dependencies = pomXml.dependencies[0]
         Closure correctDependencies = { DependencySet deps, Closure action ->
             if (!dependencies || deps.empty) {
@@ -165,7 +159,7 @@ class PomPlugin implements Plugin<Project> {
         Configuration implementation = configurations.implementation
 
         // corrections may be disabled but optional and provided configurations have to be always "corrected"
-        boolean fixScopes = !project.extensions.findByType(PomExtension).disabledScopesCorrection
+        boolean fixScopes = !extension.disabledScopesCorrection
 
         if (fixScopes) {
             correctScope(implementation.allDependencies, COMPILE)
@@ -196,6 +190,24 @@ class PomPlugin implements Plugin<Project> {
             project.plugins.withType(WarPlugin) {
                 correctScope(configurations.providedCompile.allDependencies, PROVIDED)
                 correctScope(configurations.providedRuntime.allDependencies, PROVIDED)
+            }
+        }
+    }
+
+    private void fixDependencyManagement(PomExtension extension, Node pomXml) {
+        Node dependencyManagement = pomXml.dependencyManagement[0]
+        if (!dependencyManagement) {
+            return
+        }
+        if (extension.removedDependencyManagement) {
+            // remove dependenciesManagementSection
+            pomXml.remove(dependencyManagement)
+        } else if (!extension.disabledBomsReorder) {
+            // reorder BOMs (bubble BOMs to top)
+            Node dependencies = dependencyManagement.dependencies[0]
+            dependencies.dependency.findAll { it.scope.text() != 'import' }.reverse().each {
+                dependencies.remove(it)
+                dependencies.append(it)
             }
         }
     }

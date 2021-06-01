@@ -14,6 +14,7 @@ class PomExtension {
     boolean forcedVersions
     boolean removedDependencyManagement
     boolean disabledScopesCorrection
+    boolean disabledBomsReorder
 
     /**
      * Force dependency versions in the generated pom. Useful when gradle platforms used (by default generated pom
@@ -50,5 +51,15 @@ class PomExtension {
      */
     void disableScopesCorrection() {
         disabledScopesCorrection = true
+    }
+
+    /**
+     * Gradle java-platform plugin always put used BOMs after other dependencies in the generated pom. Pom plugin fixes
+     * this by putting all BOMs at the top (unifies with spring plugin behaviour).
+     * <p>
+     * Option disables BOMs reordering to see native gradle behaviour.
+     */
+    void disableBomsReorder() {
+        disabledBomsReorder = true
     }
 }

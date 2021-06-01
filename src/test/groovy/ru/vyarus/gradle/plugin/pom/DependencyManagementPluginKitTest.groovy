@@ -178,4 +178,66 @@ class DependencyManagementPluginKitTest extends AbstractKitTest {
         then: "compileOnly dependency not added"
         pom.dependencies.'*'.find { it.artifactId.text() == 'junit' } == null
     }
+
+    def "Check dependencies reorder compatibility"() {
+        setup:
+        build("""
+            plugins {
+                id 'java'
+                id 'ru.vyarus.pom'
+                id "io.spring.dependency-management" version "1.0.11.RELEASE"
+            }
+
+            group 'ru.vyarus'
+            version 1.0
+            description 'sample description'
+            
+            repositories { mavenCentral() }
+            dependencyManagement {
+                imports {
+                    mavenBom 'ru.vyarus.guicey:guicey-bom:5.2.0-1'
+                }
+                dependencies {
+                    dependency 'org.javassist:javassist:3.16.1-GA'
+                }
+            }
+
+            publishing {
+                publications {
+                    maven(MavenPublication) {
+                        from components.java
+                    }
+                }
+            }
+
+            model {
+                tasks.generatePomFileForMavenPublication {
+                    destination = file("\$buildDir/generated-pom.xml")
+                }
+            }
+        """)
+
+        when: "run pom task"
+        run('generatePomFileForMavenPublication')
+
+        def pomFile = file("build/generated-pom.xml")
+        def pom = new XmlParser().parse(pomFile)
+        // for debug
+        println pomFile.getText()
+
+        then: "dependencies order correct (BOM first)"
+        unifyString(pomFile.text).contains """<dependency>
+        <groupId>ru.vyarus.guicey</groupId>
+        <artifactId>guicey-bom</artifactId>
+        <version>5.2.0-1</version>
+        <scope>import</scope>
+        <type>pom</type>
+      </dependency>
+      <dependency>
+        <groupId>org.javassist</groupId>
+        <artifactId>javassist</artifactId>
+        <version>3.16.1-GA</version>
+      </dependency>
+    </dependencies>"""
+    }
 }

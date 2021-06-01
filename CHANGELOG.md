@@ -1,10 +1,13 @@
 * Java plugin not required for activation anymore: main features are activated with 
-  maven-publish plugin (as before, maven-publih registered automatically for java plugin)
+  maven-publish plugin (as before, maven-publish registered automatically for java plugin)
 * Support usage with java-platform plugin (used for BOM declaration):
     - maven-publish plugin would be activated automatically
     - no additional configurations created (and no scopes auto-fixing applied)
+* Put all imported BOMs at the top of dependencyManagement section
+  (by default java-platform plugin puts all BOMs last; unifies behaviour with spring plugin)
 * New configuration closure: `pomGeneration`
     - disableScopesCorrection() - disables scope corrections applied by the plugin (to see native behaviour)
+    - disableBomsReorder() - disables putting all boms at the top (to see native behaviour)  
     - forceVersions() - always put dependency version even when boms used (gradle platforms)
     - removeDependencyManagement() - removes dependencyManagement section from pom (generated for used platforms)
         automatically forces versions (otherwise pom would become invalid).
