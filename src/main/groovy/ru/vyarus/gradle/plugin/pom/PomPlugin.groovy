@@ -205,7 +205,7 @@ class PomPlugin implements Plugin<Project> {
         } else if (!extension.disabledBomsReorder) {
             // reorder BOMs (bubble BOMs to top)
             Node dependencies = dependencyManagement.dependencies[0]
-            dependencies.dependency.findAll { it.scope.text() != 'import' }.reverse().each {
+            dependencies.dependency.findAll { it.scope.text() != 'import' }.each {
                 dependencies.remove(it)
                 dependencies.append(it)
             }

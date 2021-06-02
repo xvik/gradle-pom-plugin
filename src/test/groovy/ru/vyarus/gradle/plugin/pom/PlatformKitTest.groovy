@@ -26,6 +26,7 @@ class PlatformKitTest extends AbstractKitTest {
                 api platform('ru.vyarus.guicey:guicey-bom:5.2.0-1')
                 constraints {
                     api 'org.pf4j:pf4j:3.6.0'
+                    api 'org.pf4j:pf4j-update:2.3.0'
                 }
             }
 
@@ -72,6 +73,11 @@ class PlatformKitTest extends AbstractKitTest {
         <artifactId>pf4j</artifactId>
         <version>3.6.0</version>
       </dependency>
+      <dependency>
+        <groupId>org.pf4j</groupId>
+        <artifactId>pf4j-update</artifactId>
+        <version>2.3.0</version>
+      </dependency>
     </dependencies>"""
     }
 
@@ -96,6 +102,7 @@ class PlatformKitTest extends AbstractKitTest {
                 api platform('ru.vyarus.guicey:guicey-bom:5.2.0-1')
                 constraints {
                     api 'org.pf4j:pf4j:3.6.0'
+                    api 'org.pf4j:pf4j-update:2.3.0'
                 }
             }
 
@@ -131,6 +138,11 @@ class PlatformKitTest extends AbstractKitTest {
         <groupId>org.pf4j</groupId>
         <artifactId>pf4j</artifactId>
         <version>3.6.0</version>
+      </dependency>
+      <dependency>
+        <groupId>org.pf4j</groupId>
+        <artifactId>pf4j-update</artifactId>
+        <version>2.3.0</version>
       </dependency>
       <dependency>
         <groupId>ru.vyarus.guicey</groupId>
