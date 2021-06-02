@@ -404,4 +404,52 @@ class PomPluginKitTest extends AbstractKitTest {
         !pom.dependencies.'*'.find { it.artifactId.text() == 'annotations' }
         !pom.dependencies.'*'.find { it.artifactId.text() == 'generics-resolver' }
     }
+
+    def "Check multiple pom sections"() {
+        setup:
+        build("""
+            plugins {
+                id 'java'
+                id 'ru.vyarus.pom'
+            }
+
+            group 'ru.vyarus'
+            version 1.0
+            description 'sample description'
+
+            publishing {
+                publications {
+                    maven(MavenPublication) {
+                        from components.java
+                    }
+                }
+            }
+
+            pom {
+                name "overridden name"
+            }
+
+            pom {
+                description "overridden desc"
+            }
+
+            model {
+                tasks.generatePomFileForMavenPublication {
+                    destination = file("\$buildDir/generated-pom.xml")
+                }
+            }
+        """)
+
+        when: "run pom task"
+        run('generatePomFileForMavenPublication')
+
+        def pomFile = file("build/generated-pom.xml")
+        def pom = new XmlParser().parse(pomFile)
+        // for debug
+        println pomFile.getText()
+
+        then: "defaults should not be applied"
+        pom.name.text() == 'overridden name'
+        pom.description.text() == 'overridden desc'
+    }
 }

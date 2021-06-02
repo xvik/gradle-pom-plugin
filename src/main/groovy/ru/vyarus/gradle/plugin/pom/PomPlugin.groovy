@@ -214,10 +214,11 @@ class PomPlugin implements Plugin<Project> {
 
     private void applyUserPom(Project project, Node pomXml) {
         PomConvention pomExt = project.convention.plugins.pom
-        if (pomExt.config) {
-            XmlMerger.mergePom(pomXml, pomExt.config)
+        // multiple pom configuration blocks could be used (especially in multi-module environment)
+        pomExt.configs.each {
+            XmlMerger.mergePom(pomXml, it)
         }
-        pomExt.xmlModifier?.call(pomXml)
+        pomExt.xmlModifiers.each { it.call(pomXml) }
         // apply defaults if required
         if (!pomXml.name) {
             pomXml.appendNode('name', project.name)

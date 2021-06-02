@@ -49,4 +49,53 @@ class ManualPomModificationKitTest extends AbstractKitTest {
         pom.tata.text() == 'blabla'
     }
 
+    def "Check pom manual modification with multiple sections"() {
+        setup:
+        build("""
+            plugins {
+                id 'java'
+                id 'ru.vyarus.pom'
+            }
+
+            publishing {
+                publications {
+                    maven(MavenPublication) {
+                        from components.java
+                    }
+                }
+            }
+
+            pom {
+                name "override"
+            }
+
+            withPomXml {
+                it.appendNode('tata', 'blabla')
+            }
+
+            withPomXml {
+                it.appendNode('baba', 'ablabl')
+            }
+
+            model {
+                tasks.generatePomFileForMavenPublication {
+                    destination = file("\$buildDir/generated-pom.xml")
+                }
+            }
+        """)
+
+        when: "run pom task"
+        run('generatePomFileForMavenPublication')
+
+        def pomFile = file("build/generated-pom.xml")
+        def pom = new XmlParser().parse(pomFile)
+        // for debug
+        println pomFile.getText()
+
+        then: "all pom customizations applied"
+        pom.name.text() == 'override'
+        pom.tata.text() == 'blabla'
+        pom.baba.text() == 'ablabl'
+    }
+
 }

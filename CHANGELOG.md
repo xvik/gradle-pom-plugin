@@ -13,6 +13,8 @@
         automatically forces versions (otherwise pom would become invalid).
         Option assumed to be used with gradle platforms to not "leak" platform into generated poms.
         Compatible with spring dependency management plugin
+* Allow using multiple pom and withPomXml configurations. Useful in multi-module projects
+  (for example, to declare common configuration in allprojects section and specific configurations in subproject itself)
 
 ### 2.1.0 (2020-01-19)
 * Partially reverting 1.3 behavior: add `optional` and `provided` configurations because it appears that it's not possible in gradle to completely replace them

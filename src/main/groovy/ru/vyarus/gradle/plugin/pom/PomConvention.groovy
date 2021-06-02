@@ -25,10 +25,9 @@ import groovy.transform.CompileStatic
  *     }
  * </code>
  * <pre>
- * Only one pom configuration may be defined: if multiple pom configurations defined, only the last one will be
- * applied
+ * Multiple declarations could be used.
  * <p>
- * If manual pom modification is required:
+ * If manual pom modification is required use:
  * <pre><code>
  *     withPomXml {
  *         it.appendNode('description', 'A demonstration of maven POM customization')
@@ -42,14 +41,14 @@ import groovy.transform.CompileStatic
  */
 @CompileStatic
 class PomConvention {
-    Closure config
-    Closure xmlModifier
+    List<Closure> configs = []
+    List<Closure> xmlModifiers = []
 
     /**
      * @param config user pom
      */
     void pom(Closure config) {
-        this.config = config
+        this.configs.add(config)
     }
 
     /**
@@ -57,6 +56,6 @@ class PomConvention {
      * @param modifier manual pom modification closure
      */
     void withPomXml(Closure modifier) {
-        xmlModifier = modifier
+        this.xmlModifiers.add(modifier)
     }
 }
