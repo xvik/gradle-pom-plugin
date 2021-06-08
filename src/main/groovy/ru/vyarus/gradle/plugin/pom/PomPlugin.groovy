@@ -2,6 +2,7 @@ package ru.vyarus.gradle.plugin.pom
 
 import groovy.transform.CompileStatic
 import groovy.transform.TypeCheckingMode
+import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
@@ -101,20 +102,26 @@ class PomPlugin implements Plugin<Project> {
     private void activatePomModifications(Project project) {
         PublishingExtension publishing = project.publishing
         // apply to all configured maven publications (even not yet registered)
-        publishing.publications.withType(MavenPublication) {
+        publishing.publications.withType(MavenPublication) { pub ->
             // important to apply after possible user modifications because otherwise duplicate tags will arise
             project.afterEvaluate {
                 PomExtension extension = project.extensions.findByType(PomExtension)
                 if (extension.forcedVersions) {
                     // Recommended way: see https://docs.gradle.org/current/userguide/publishing_maven.html
                     // #publishing_maven:resolved_dependencies
-                    versionMapping {
+                    pub.versionMapping {
                         usage('java-api') {
                             fromResolutionOf('runtimeClasspath')
                         }
                         usage('java-runtime') {
                             fromResolutionResult()
                         }
+                    }
+                    if (project.repositories.empty) {
+                        // error because otherwise gradle would silently NOT SET versions
+                        // this situation is hard to diagnose without error!
+                        throw new GradleException('No repositories declared: gradle would not be able to set ' +
+                                'correct dependencies versions in pom. Use at least: repositories { mavenCentral() }')
                     }
                 }
                 pom.withXml {

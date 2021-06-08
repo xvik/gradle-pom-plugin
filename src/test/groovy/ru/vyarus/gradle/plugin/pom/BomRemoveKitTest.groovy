@@ -102,6 +102,47 @@ class BomRemoveKitTest extends AbstractKitTest {
         pom.dependencyManagement.dependencies.dependency.size() == 1
     }
 
+    def "Check forced versions without repository declared"() {
+        setup:
+        build("""
+            plugins {
+                id 'java'
+                id 'ru.vyarus.pom'
+            }
+
+            dependencies {
+                implementation platform('com.google.inject:guice-bom:4.0')
+                implementation 'com.google.inject:guice'
+            }
+
+            publishing {
+                publications {
+                    maven(MavenPublication) {
+                        from components.java
+                    }
+                }
+            }
+
+            pomGeneration {
+                forceVersions()
+            }
+
+            model {
+                tasks.generatePomFileForMavenPublication {
+                    destination = file("\$buildDir/generated-pom.xml")
+                }
+            }
+
+            // !!!! repositories {mavenCentral()}
+        """)
+
+        when: "run pom task"
+        def res = runFailed('generatePomFileForMavenPublication')
+
+        then: "problem detected"
+        res.output.contains('No repositories declared: gradle would not be able to set')
+    }
+
     def "Check removed platform section"() {
         setup:
         build("""
