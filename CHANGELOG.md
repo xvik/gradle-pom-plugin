@@ -1,4 +1,5 @@
-* Java plugin not required for activation anymore: main features are activated with 
+### 2.2.0 (2021-06-21)
+* Java plugin not required for activation anymore: main features activated with 
   maven-publish plugin (as before, maven-publish registered automatically for java plugin)
 * Support usage with java-platform plugin (used for BOM declaration):
     - maven-publish plugin would be activated automatically
