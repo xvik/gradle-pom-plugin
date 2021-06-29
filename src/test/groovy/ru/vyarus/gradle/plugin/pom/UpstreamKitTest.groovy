@@ -6,7 +6,7 @@ package ru.vyarus.gradle.plugin.pom
  */
 class UpstreamKitTest extends AbstractKitTest {
 
-    String GRADLE_VERSION = '7.0'
+    String GRADLE_VERSION = '7.1'
 
     def "Check pom modifications"() {
         setup:
