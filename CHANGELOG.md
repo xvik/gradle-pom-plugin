@@ -1,6 +1,7 @@
-* Fail if pom or withPomXml closure applied in different project convention
-    This could happen in allprojects section when java plugin applied lately (e.g. in subprojects section)
-    and pom closure applied to root project's convention (that's how conventions work) 
+### 2.2.1 (2021-10-28)
+* Incorrect usage detection: fail if pom or withPomXml closure applied to upper project convention
+  This could happen in allprojects section when java plugin applied lately (e.g. in subprojects section)
+  and pom closure applied to root project's convention (that's how conventions work) 
 
 ### 2.2.0 (2021-06-21)
 * Java plugin not required for activation anymore: main features activated with 

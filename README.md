@@ -57,7 +57,7 @@ buildscript {
         gradlePluginPortal()
     }
     dependencies {
-        classpath 'ru.vyarus:gradle-pom-plugin:2.2.0'
+        classpath 'ru.vyarus:gradle-pom-plugin:2.2.1'
     }
 }
 apply plugin: 'ru.vyarus.pom'
@@ -67,7 +67,7 @@ OR
 
 ```groovy
 plugins {
-    id 'ru.vyarus.pom' version '2.2.0'
+    id 'ru.vyarus.pom' version '2.2.1'
 }
 ```
 
@@ -77,7 +77,7 @@ Plugin compiled for java 8, compatible with java 11.
 
 Gradle | Version
 --------|-------
-5.0     | 2.2.0
+5.0     | 2.2.1
 4.6     | [1.3.0](https://github.com/xvik/gradle-pom-plugin/tree/1.3.0)
 older   | [1.2.0](https://github.com/xvik/gradle-pom-plugin/tree/1.2.0)
 
@@ -817,13 +817,16 @@ allprojects {
 
     group = 'com.sample'
     
-    // general pom info, required for all poms (including BOM)
-    pom {
-        developers {
-            developer {
-                id 'johnd'
-                name 'John Doe'
-                email 'johnd@somemail.com'
+    // delay required because otherwise pom closure would be applied before java plugin activation
+    afterEvaluate {
+        // general pom info, required for all poms (including BOM)
+        pom {
+            developers {
+                developer {
+                    id 'johnd'
+                    name 'John Doe'
+                    email 'johnd@somemail.com'
+                }
             }
         }
     }
