@@ -1,6 +1,6 @@
 # Gradle POM plugin
 [![License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat)](http://www.opensource.org/licenses/MIT)
-[![Build Status](https://travis-ci.com/xvik/gradle-pom-plugin.svg?branch=master)](https://travis-ci.com/xvik/gradle-pom-plugin)
+[![CI](https://github.com/xvik/gradle-pom-plugin/actions/workflows/CI.yml/badge.svg)](https://github.com/xvik/gradle-pom-plugin/actions/workflows/CI.yml)
 [![Appveyor build status](https://ci.appveyor.com/api/projects/status/github/xvik/gradle-pom-plugin?svg=true)](https://ci.appveyor.com/project/xvik/gradle-pom-plugin)
 [![codecov](https://codecov.io/gh/xvik/gradle-pom-plugin/branch/master/graph/badge.svg)](https://codecov.io/gh/xvik/gradle-pom-plugin)
 
