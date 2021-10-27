@@ -70,7 +70,7 @@ class PomPlugin implements Plugin<Project> {
         // (case: using java-platform for BOM publication)
         project.plugins.withType(MavenPublishPlugin) {
             // extensions mechanism not used because we need free closure for pom xml modification
-            project.convention.plugins.pom = new PomConvention()
+            project.convention.plugins.pom = new PomConvention(project)
             // used to configure applied pom modifications
             project.extensions.create('pomGeneration', PomExtension)
             // additional configurations are not useful for BOM
