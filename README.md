@@ -57,7 +57,7 @@ buildscript {
         gradlePluginPortal()
     }
     dependencies {
-        classpath 'ru.vyarus:gradle-pom-plugin:2.2.1'
+        classpath 'ru.vyarus:gradle-pom-plugin:2.2.2'
     }
 }
 apply plugin: 'ru.vyarus.pom'
@@ -67,7 +67,7 @@ OR
 
 ```groovy
 plugins {
-    id 'ru.vyarus.pom' version '2.2.1'
+    id 'ru.vyarus.pom' version '2.2.2'
 }
 ```
 
@@ -77,7 +77,7 @@ Plugin compiled for java 8, compatible with java 11.
 
 Gradle | Version
 --------|-------
-5.0     | 2.2.1
+5.0     | 2.2.2
 4.6     | [1.3.0](https://github.com/xvik/gradle-pom-plugin/tree/1.3.0)
 older   | [1.2.0](https://github.com/xvik/gradle-pom-plugin/tree/1.2.0)
 
