@@ -117,12 +117,6 @@ class PomPlugin implements Plugin<Project> {
                             fromResolutionResult()
                         }
                     }
-                    if (project.repositories.empty) {
-                        // error because otherwise gradle would silently NOT SET versions
-                        // this situation is hard to diagnose without error!
-                        throw new GradleException('No repositories declared: gradle would not be able to set ' +
-                                'correct dependencies versions in pom. Use at least: repositories { mavenCentral() }')
-                    }
                 }
                 pom.withXml {
                     Node pomXml = asNode()
@@ -132,6 +126,9 @@ class PomPlugin implements Plugin<Project> {
                     }
                     fixDependencyManagement(extension, pomXml)
                     applyUserPom(project, pomXml)
+                    if (extension.forcedVersions) {
+                        validateVersions(pomXml)
+                    }
                 }
             }
         }
@@ -232,6 +229,25 @@ class PomPlugin implements Plugin<Project> {
         }
         if (project.description && !pomXml.description) {
             pomXml.appendNode('description', project.description)
+        }
+    }
+
+    private void validateVersions(Node pomXml) {
+        Node deps = pomXml.dependencies[0]
+        if (!deps) {
+            return
+        }
+
+        List<String> errors = []
+        deps.dependency.findAll {
+            if (!it.version.text()) {
+                errors.add("\t${it.groupId.text()}:${it.artifactId.text()}\n")
+            }
+        }
+        if (errors) {
+            throw new GradleException('No versions resolved for the following dependencies. Most likely, there are ' +
+                    'no required repositories declared. Declare missed repositories with, for example: ' +
+                    'repositories { mavenCentral() }\n' + errors.join(''))
         }
     }
 }

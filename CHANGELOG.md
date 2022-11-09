@@ -1,3 +1,7 @@
+* Fix fail when repositories declared in settings (#35)
+  Now, when forceVersions() enabled, plugin will check versions in the generated pom 
+  and fail if any versions would be missed (with a list of artefacts)
+
 ### 2.2.1 (2021-10-28)
 * Incorrect usage detection: fail if pom or withPomXml closure applied to upper project convention
   This could happen in allprojects section when java plugin applied lately (e.g. in subprojects section)

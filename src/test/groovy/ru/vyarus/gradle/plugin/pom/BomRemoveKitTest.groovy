@@ -140,7 +140,8 @@ class BomRemoveKitTest extends AbstractKitTest {
         def res = runFailed('generatePomFileForMavenPublication')
 
         then: "problem detected"
-        res.output.contains('No repositories declared: gradle would not be able to set')
+        res.output.contains('No versions resolved for the following dependencies')
+        res.output.contains('com.google.inject:guice')
     }
 
     def "Check removed platform section"() {
