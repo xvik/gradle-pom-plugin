@@ -1,5 +1,7 @@
 package ru.vyarus.gradle.plugin.pom
 
+import groovy.xml.XmlParser
+
 /**
  * @author Vyacheslav Rusakov
  * @since 11.08.2017
@@ -23,8 +25,6 @@ class JavaLibraryCompatibilityKitTest extends AbstractKitTest {
                 implementation 'ru.vyarus:gradle-quality-plugin:2.0.0'
                 runtimeOnly 'ru.vyarus:guice-ext-annotations:1.1.1'
                 compileOnly 'org.javassist:javassist:3.16.1-GA'
-                apiElements 'ru.vyarus:generics-resolver:2.0.0'
-                runtimeElements 'com.google.code.findbugs:annotations:3.0.0'   
                 provided 'junit:junit:4.12'
             }
 
@@ -72,12 +72,6 @@ class JavaLibraryCompatibilityKitTest extends AbstractKitTest {
 
         then: "compileOnly dependency removed"
         pom.dependencies.'*'.find { it.artifactId.text() == 'javassist' } == null
-
-        then: "api elements dependencies valid"
-        pom.dependencies.'*'.find { it.artifactId.text() == 'generics-resolver' }.scope.text() == 'compile'
-
-        then: "runtime elements dependencies valid"
-        pom.dependencies.'*'.find { it.artifactId.text() == 'annotations' }.scope.text() == 'runtime'
 
         then: "provided dependency scope corrected"
         pom.dependencies.'*'.find { it.artifactId.text() == 'junit' }.scope.text() == 'provided'

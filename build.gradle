@@ -13,15 +13,18 @@ plugins {
     id "pl.droidsonroids.jacoco.testkit" version "1.0.12"
 }
 
-sourceCompatibility = 1.8
+java {
+    sourceCompatibility = 1.8
+}
 
 wrapper {
-    gradleVersion = '6.9'
+    gradleVersion = '8.6'
+    distributionType = Wrapper.DistributionType.BIN
 }
 
 repositories { mavenLocal(); mavenCentral(); gradlePluginPortal() }
 dependencies {
-    testImplementation('org.spockframework:spock-core:2.0-groovy-2.5') {
+    testImplementation('org.spockframework:spock-core:2.3-groovy-3.0') {
         exclude group: 'org.codehaus.groovy'
     }
 }

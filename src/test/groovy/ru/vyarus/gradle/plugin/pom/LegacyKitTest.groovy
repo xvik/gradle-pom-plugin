@@ -1,12 +1,14 @@
 package ru.vyarus.gradle.plugin.pom
 
+import groovy.xml.XmlParser
+
 /**
  * @author Vyacheslav Rusakov
  * @since 14.01.2020
  */
 class LegacyKitTest extends AbstractKitTest {
 
-    String GRADLE_VERSION = '5.0'
+    String GRADLE_VERSION = '7.0'
 
     def "Check pom modifications"() {
         setup:
@@ -29,10 +31,6 @@ class LegacyKitTest extends AbstractKitTest {
                 optional 'ru.vyarus:generics-resolver:2.0.0'
                 // disappear    
                 compileOnly 'junit:junit:4.12'
-
-                // deprecated
-                compile 'ru.vyarus:gradle-pom-plugin:1.0.0'
-                runtime 'ru.vyarus:gradle-quality-plugin:2.0.0'
             }
 
             publishing {
@@ -84,12 +82,6 @@ class LegacyKitTest extends AbstractKitTest {
 
         then: "compileOnly dependencies are removed from pom"
         pom.dependencies.'*'.find { it.artifactId.text() == 'junit' } == null
-
-        then: "compile dependency scope corrected"
-        pom.dependencies.'*'.find { it.artifactId.text() == 'gradle-pom-plugin' }.scope.text() == 'compile'
-
-        then: "runtime dependency scope corrected"
-        pom.dependencies.'*'.find { it.artifactId.text() == 'gradle-quality-plugin' }.scope.text() == 'runtime'
 
         then: "pom modification applied"
         def developer = pom.developers.developer

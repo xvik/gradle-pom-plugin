@@ -1,4 +1,7 @@
 package ru.vyarus.gradle.plugin.pom
+
+import groovy.xml.XmlParser
+
 /**
  * @author Vyacheslav Rusakov
  * @since 04.09.2016

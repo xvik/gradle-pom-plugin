@@ -1,5 +1,7 @@
 package ru.vyarus.gradle.plugin.pom
 
+import groovy.xml.XmlParser
+
 /**
  * @author Vyacheslav Rusakov 
  * @since 06.11.2015
@@ -27,10 +29,6 @@ class PomPluginKitTest extends AbstractKitTest {
                 optional 'ru.vyarus:generics-resolver:2.0.0'
                 // disappear    
                 compileOnly 'junit:junit:4.12'
-
-                // deprecated
-                compile 'ru.vyarus:gradle-pom-plugin:1.0.0'
-                runtime 'ru.vyarus:gradle-quality-plugin:2.0.0'
             }
 
             publishing {
@@ -83,12 +81,6 @@ class PomPluginKitTest extends AbstractKitTest {
         then: "compileOnly dependencies are removed from pom"
         pom.dependencies.'*'.find { it.artifactId.text() == 'junit' } == null
 
-        then: "compile dependency scope corrected"
-        pom.dependencies.'*'.find { it.artifactId.text() == 'gradle-pom-plugin' }.scope.text() == 'compile'
-
-        then: "runtime dependency scope corrected"
-        pom.dependencies.'*'.find { it.artifactId.text() == 'gradle-quality-plugin' }.scope.text() == 'runtime'
-
         then: "pom modification applied"
         def developer = pom.developers.developer
         developer.id.text() == 'dev'
@@ -121,10 +113,6 @@ class PomPluginKitTest extends AbstractKitTest {
                 optional 'ru.vyarus:generics-resolver:2.0.0'
                 // disappear    
                 compileOnly 'junit:junit:4.12'
-
-                // deprecated
-                compile 'ru.vyarus:gradle-pom-plugin:1.0.0'
-                runtime 'ru.vyarus:gradle-quality-plugin:2.0.0'
             }
 
             publishing {
@@ -180,12 +168,6 @@ class PomPluginKitTest extends AbstractKitTest {
 
         then: "compileOnly dependencies are removed from pom"
         pom.dependencies.'*'.find { it.artifactId.text() == 'junit' } == null
-
-        then: "compile dependency scope not corrected"
-        pom.dependencies.'*'.find { it.artifactId.text() == 'gradle-pom-plugin' }.scope.text() == 'compile'
-
-        then: "runtime dependency scope not corrected"
-        pom.dependencies.'*'.find { it.artifactId.text() == 'gradle-quality-plugin' }.scope.text() == 'compile'
     }
 
     def "Check pom defaults override"() {
@@ -373,8 +355,8 @@ class PomPluginKitTest extends AbstractKitTest {
             description 'sample description'
 
             dependencies {
-                testCompile 'com.google.code.findbugs:annotations:3.0.0'
-                testRuntime 'ru.vyarus:generics-resolver:2.0.0'
+                testImplementation 'com.google.code.findbugs:annotations:3.0.0'
+                testRuntimeOnly 'ru.vyarus:generics-resolver:2.0.0'
             }
 
             publishing {

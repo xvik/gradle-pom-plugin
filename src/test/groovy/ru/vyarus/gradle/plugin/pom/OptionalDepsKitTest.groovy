@@ -1,5 +1,7 @@
 package ru.vyarus.gradle.plugin.pom
 
+import groovy.xml.XmlParser
+
 /**
  * @author Vyacheslav Rusakov
  * @since 14.01.2020
@@ -34,6 +36,8 @@ class OptionalDepsKitTest extends AbstractKitTest {
                 publications {
                     maven(MavenPublication) {
                         from components.java
+                        suppressPomMetadataWarningsFor('someFeatureApiElements')
+                        suppressPomMetadataWarningsFor('someFeatureRuntimeElements')
                     }
                 }
             }
@@ -68,7 +72,7 @@ class OptionalDepsKitTest extends AbstractKitTest {
 
         then: "some feature dependencies exists as optionals"
         def dep = pom.dependencies.'*'.find { it.artifactId.text() == 'annotations' }
-        dep.scope.text() == 'compile'
+        dep.scope.text() == 'runtime'
         dep.optional.text() == 'true'
     }
 }

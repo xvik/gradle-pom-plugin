@@ -1,3 +1,5 @@
+* (BREAKING) Drop gradle 5 and 6 support
+
 ### 2.2.2 (2022-11-09)
 * Fix fail when repositories declared in settings file only (#35)
   Now, when forceVersions() enabled, plugin will check versions in the generated pom 

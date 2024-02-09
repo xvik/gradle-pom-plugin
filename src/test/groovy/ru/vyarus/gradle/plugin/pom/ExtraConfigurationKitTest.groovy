@@ -1,5 +1,7 @@
 package ru.vyarus.gradle.plugin.pom
 
+import groovy.xml.XmlParser
+
 /**
  * Apt plugin adds special configuration "apt". Google gson dependency is declared directly in compile,
  * but also present as transitive in apt configuration.
@@ -15,22 +17,21 @@ class ExtraConfigurationKitTest extends AbstractKitTest {
             plugins {
                 id 'java'
                 id 'ru.vyarus.pom'
-                id 'net.ltgt.apt' version '0.6'
             }
 
             group 'ru.vyarus'
             version 1.0
             description 'sample description'
 
-            configurations.provided.extendsFrom configurations.apt
+            configurations.provided.extendsFrom configurations.annotationProcessor
 
             repositories { mavenCentral() }
             dependencies {
                 implementation 'com.google.code.gson:gson:2.6.2'
 
-                apt 'org.immutables:value:2.1.19'
-                apt 'org.immutables:builder:2.1.19'
-                apt 'org.immutables:gson:2.1.19'
+                annotationProcessor 'org.immutables:value:2.1.19'
+                annotationProcessor 'org.immutables:builder:2.1.19'
+                annotationProcessor 'org.immutables:gson:2.1.19'
             }
 
             publishing {

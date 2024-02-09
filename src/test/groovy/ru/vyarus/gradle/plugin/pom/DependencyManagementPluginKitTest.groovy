@@ -1,5 +1,7 @@
 package ru.vyarus.gradle.plugin.pom
 
+import groovy.xml.XmlParser
+
 /**
  * @author Vyacheslav Rusakov
  * @since 05.08.2016
@@ -25,7 +27,7 @@ class DependencyManagementPluginKitTest extends AbstractKitTest {
                 }
             }
             dependencies {
-                compile 'org.javassist:javassist'
+                implementation 'org.javassist:javassist'
             }
 
             publishing {
@@ -51,11 +53,11 @@ class DependencyManagementPluginKitTest extends AbstractKitTest {
         // for debug
         println pomFile.getText()
 
-        then: "compile dependency scope corrected"
+        then: "implementation dependency scope corrected"
         def dep = pom.dependencies.'*'.find { it.artifactId.text() == 'javassist' }
         dep.scope.text() == 'compile'
 
-        then: "compile dependency version not set"
+        then: "implementation dependency version not set"
         !dep.version
     }
 
@@ -83,7 +85,7 @@ class DependencyManagementPluginKitTest extends AbstractKitTest {
                 }
             }
             dependencies {
-                compile 'com.google.inject:guice'
+                implementation 'com.google.inject:guice'
             }
 
             publishing {
@@ -111,11 +113,11 @@ class DependencyManagementPluginKitTest extends AbstractKitTest {
         // for debug
         println pomFile.getText()
 
-        then: "compile dependency scope corrected"
+        then: "implementation dependency scope corrected"
         def dep = pom.dependencies.'*'.find { it.artifactId.text() == 'guice' }
         dep.scope.text() == 'compile'
 
-        then: "compile dependency version not set"
+        then: "implementation dependency version not set"
         !dep.version
     }
 

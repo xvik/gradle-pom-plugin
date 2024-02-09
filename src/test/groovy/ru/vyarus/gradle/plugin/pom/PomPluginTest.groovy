@@ -44,7 +44,7 @@ class PomPluginTest extends AbstractTest {
         project.configurations.findByName("provided")
         project.configurations.findByName("optional")
         project.configurations.findByName(JavaPlugin.IMPLEMENTATION_CONFIGURATION_NAME).extendsFrom
-                .collect{it.name} == ["compile", "provided", "optional"]
+                .collect{it.name} == ["provided", "optional"]
 
         then: "extension container registered"
         project.convention.plugins.pom
@@ -70,7 +70,7 @@ class PomPluginTest extends AbstractTest {
         project.configurations.findByName("provided")
         project.configurations.findByName("optional")
         project.configurations.findByName(JavaPlugin.IMPLEMENTATION_CONFIGURATION_NAME).extendsFrom
-                .collect{it.name} == ["compile", "provided", "optional"]
+                .collect{it.name} == ["provided", "optional"]
 
         then: "extension container registered"
         project.convention.plugins.pom
