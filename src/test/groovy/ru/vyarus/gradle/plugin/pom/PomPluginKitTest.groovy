@@ -38,8 +38,8 @@ class PomPluginKitTest extends AbstractKitTest {
                     }
                 }
             }
-
-            pom {
+            
+            maven.pom {
                 developers {
                     developer {
                         id "dev"
@@ -123,19 +123,19 @@ class PomPluginKitTest extends AbstractKitTest {
                 }
             }
 
-            pomGeneration {
-                disableScopesCorrection()
-            }
-
-            pom {
-                developers {
-                    developer {
-                        id "dev"
-                        name "Dev Dev"
-                        email "dev@gmail.com"
+            maven {  
+                pom {
+                    developers {
+                        developer {
+                            id "dev"
+                            name "Dev Dev"
+                            email "dev@gmail.com"
+                        }
                     }
                 }
-            }
+
+                disableScopesCorrection()
+            }           
 
             model {
                 tasks.generatePomFileForMavenPublication {
@@ -190,7 +190,7 @@ class PomPluginKitTest extends AbstractKitTest {
                 }
             }
 
-            pom {
+            maven.pom {
                 name "override"
                 description "override"
             }
@@ -293,7 +293,7 @@ class PomPluginKitTest extends AbstractKitTest {
                 }
             }
 
-            pom {
+            maven.pom {
                 developers {
                     developer {
                         id "dev"
@@ -407,11 +407,11 @@ class PomPluginKitTest extends AbstractKitTest {
                 }
             }
 
-            pom {
+            maven.pom {
                 name "overridden name"
             }
 
-            pom {
+            maven.pom {
                 description "overridden desc"
             }
 

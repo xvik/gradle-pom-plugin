@@ -31,7 +31,7 @@ class GradleNativeBOMKitTest extends AbstractKitTest {
                 implementation 'io.dropwizard:dropwizard-core'
             }  
 
-            pom {
+            maven.pom {
                 developers {
                     developer {
                         id 'jdoe'

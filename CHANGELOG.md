@@ -1,4 +1,13 @@
 * (BREAKING) Drop gradle 5 and 6 support
+    - remove compile and runtime configurations support (were deprecated, now removed in gradle) 
+* (BREAKING) Conventions merged with extension (due to conventions deprecation):
+    - pomGeneration extension renamed to maven
+    - pom and withPomXml conventions moved into extension: maven.pom and maven.withPomXml accordingly 
+    
+Migration: 
+- Rename pomGeneration{} into maven{}
+- Rename pom{} and withPomXml{} into maven.pom{} and maven.withPomXml{} 
+  (or move then inside maven block, if pomGeneration extension was already used)
 
 ### 2.2.2 (2022-11-09)
 * Fix fail when repositories declared in settings file only (#35)

@@ -9,7 +9,6 @@ import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.ConfigurationContainer
 import org.gradle.api.artifacts.Dependency
 import org.gradle.api.artifacts.DependencySet
-import org.gradle.api.internal.artifacts.configurations.ConfigurationContainerInternal
 import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.plugins.WarPlugin
 import org.gradle.api.publish.PublishingExtension
@@ -51,8 +50,8 @@ import ru.vyarus.gradle.plugin.pom.xml.XmlMerger
 @CompileStatic(TypeCheckingMode.SKIP)
 class PomPlugin implements Plugin<Project> {
 
+    private static final String EXT = 'maven'
     private static final String COMPILE = 'compile'
-    private static final String RUNTIME = 'runtime'
     private static final String PROVIDED = 'provided'
     private static final String OPTIONAL = 'optional'
 
@@ -69,10 +68,7 @@ class PomPlugin implements Plugin<Project> {
         // in case when java plugin is not used and maven plugin activated manually
         // (case: using java-platform for BOM publication)
         project.plugins.withType(MavenPublishPlugin) {
-            // extensions mechanism not used because we need free closure for pom xml modification
-            project.convention.plugins.pom = new PomConvention(project)
-            // used to configure applied pom modifications
-            project.extensions.create('pomGeneration', PomExtension)
+            project.extensions.create(EXT, PomExtension, project)
             // additional configurations are not useful for BOM
             project.plugins.withType(JavaPlugin) {
                 addConfigurations(project)
@@ -181,15 +177,6 @@ class PomPlugin implements Plugin<Project> {
                 PROVIDED)
 
         if (fixScopes) {
-            // deprecated configurations fixes: existence check is required as they will be removed in gradle 7 (or 8)
-            if ((configurations as ConfigurationContainerInternal).findByName(RUNTIME) != null) {
-                // not allDependencies because runtime extends compile
-                correctScope(configurations.runtime.dependencies, RUNTIME)
-            }
-            if ((configurations as ConfigurationContainerInternal).findByName(COMPILE) != null) {
-                correctScope(configurations.compile.allDependencies, COMPILE)
-            }
-
             // war plugin configurations by default added as compile, which is wrong
             project.plugins.withType(WarPlugin) {
                 correctScope(configurations.providedCompile.allDependencies, PROVIDED)
@@ -217,7 +204,7 @@ class PomPlugin implements Plugin<Project> {
     }
 
     private void applyUserPom(Project project, Node pomXml) {
-        PomConvention pomExt = project.convention.plugins.pom
+        PomExtension pomExt = project.extensions.findByName(EXT)
         // multiple pom configuration blocks could be used (especially in multi-module environment)
         pomExt.configs.each {
             XmlMerger.mergePom(pomXml, it)

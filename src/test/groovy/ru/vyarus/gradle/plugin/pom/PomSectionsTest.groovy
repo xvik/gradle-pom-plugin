@@ -27,7 +27,7 @@ class PomSectionsTest extends AbstractKitTest {
                 }
             }
 
-            pom {
+            maven.pom {
                 groupId 'test'
                 artifactId 'name'
                 version 1.0

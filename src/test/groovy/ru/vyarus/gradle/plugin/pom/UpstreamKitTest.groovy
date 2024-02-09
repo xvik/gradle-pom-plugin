@@ -41,7 +41,7 @@ class UpstreamKitTest extends AbstractKitTest {
                 }
             }
 
-            pom {
+            maven.pom {
                 developers {
                     developer {
                         id "dev"

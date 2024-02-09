@@ -28,7 +28,7 @@ class NoDependenciesBlockKitTest extends AbstractKitTest {
                 }
             } 
 
-            pom {
+            maven.pom {
                 developers {
                     developer {
                         id "dev"
@@ -93,7 +93,7 @@ class NoDependenciesBlockKitTest extends AbstractKitTest {
                 }
             }
 
-            pom {
+            maven.pom {
                 developers {
                     developer {
                         id "dev"

@@ -108,7 +108,7 @@ class PlatformKitTest extends AbstractKitTest {
                 }
             }
 
-            pomGeneration {
+            maven {
                 disableBomsReorder()
             }
 

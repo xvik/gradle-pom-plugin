@@ -27,7 +27,7 @@ class RelativePathCaseKitTest extends AbstractKitTest {
                 }
             }
 
-            pom {
+            maven.pom {
                 parent {
                     name 'name'
                     _relativePath 'path'

@@ -31,7 +31,7 @@ class PomMergeKitTest extends AbstractKitTest {
                 }
             }
 
-            pom {
+            maven.pom {
                 name 'custom'
             }
 
@@ -80,7 +80,7 @@ class PomMergeKitTest extends AbstractKitTest {
                 }
             }
 
-            pom {
+            maven.pom {
                 name 'custom'
                 scm {
                   url "http://google.com"
@@ -132,7 +132,7 @@ class PomMergeKitTest extends AbstractKitTest {
                 }
             }
 
-            pom {
+            maven.pom {
                 first {
                     second {
                         val1 '1'

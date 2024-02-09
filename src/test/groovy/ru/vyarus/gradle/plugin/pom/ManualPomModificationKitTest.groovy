@@ -23,13 +23,15 @@ class ManualPomModificationKitTest extends AbstractKitTest {
                     }
                 }
             }
-
-            pom {
-                name "override"
-            }
-
-            withPomXml {
-                it.appendNode('tata', 'blabla')
+            
+            maven {
+                pom {
+                    name "override"
+                }
+    
+                withPomXml {
+                    it.appendNode('tata', 'blabla')
+                }
             }
 
             model {
@@ -67,17 +69,19 @@ class ManualPomModificationKitTest extends AbstractKitTest {
                     }
                 }
             }
-
-            pom {
-                name "override"
-            }
-
-            withPomXml {
-                it.appendNode('tata', 'blabla')
-            }
-
-            withPomXml {
-                it.appendNode('baba', 'ablabl')
+            
+            maven {
+                pom {
+                    name "override"
+                }
+    
+                withPomXml {
+                    it.appendNode('tata', 'blabla')
+                }
+    
+                withPomXml {
+                    it.appendNode('baba', 'ablabl')
+                }      
             }
 
             model {

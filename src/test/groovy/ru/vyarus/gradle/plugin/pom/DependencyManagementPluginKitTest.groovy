@@ -145,7 +145,7 @@ class DependencyManagementPluginKitTest extends AbstractKitTest {
                 compileOnly 'junit:junit'
             }  
 
-            pom {
+            maven.pom {
                 developers {
                     developer {
                         id 'jdoe'

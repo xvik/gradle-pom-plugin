@@ -32,7 +32,7 @@ class PropertiesBlockTest extends AbstractKitTest {
                 libVersion = '1.0'
             }
 
-            pom {
+            maven.pom {
                 properties {
                     sample some
                     'some.ver' 'tt'

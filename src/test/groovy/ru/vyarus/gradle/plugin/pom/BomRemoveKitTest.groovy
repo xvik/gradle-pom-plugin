@@ -75,7 +75,7 @@ class BomRemoveKitTest extends AbstractKitTest {
                 }
             }
 
-            pomGeneration {
+            maven {
                 forceVersions()
             }
 
@@ -125,7 +125,7 @@ class BomRemoveKitTest extends AbstractKitTest {
                 }
             }
 
-            pomGeneration {
+            maven {
                 forceVersions()
             }
 
@@ -167,7 +167,7 @@ class BomRemoveKitTest extends AbstractKitTest {
                 }
             }
 
-            pomGeneration {
+            maven {
                 removeDependencyManagement()
             }
 
@@ -222,7 +222,7 @@ class BomRemoveKitTest extends AbstractKitTest {
                 }
             }
 
-            pomGeneration {
+            maven {
                 removeDependencyManagement()
             }
 

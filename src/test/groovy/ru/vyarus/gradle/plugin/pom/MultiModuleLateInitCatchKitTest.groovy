@@ -25,7 +25,7 @@ class MultiModuleLateInitCatchKitTest extends AbstractKitTest {
 
                 apply plugin: 'ru.vyarus.pom'
 
-                pom {
+                maven.pom {
                     description 'sample'
                 }
             }                                 
@@ -77,7 +77,7 @@ class MultiModuleLateInitCatchKitTest extends AbstractKitTest {
 
                 apply plugin: 'ru.vyarus.pom'
 
-                withPomXml {
+                maven.withPomXml {
                     it.appendNode('tata', 'blabla')
                 }
             }                                 
@@ -138,7 +138,7 @@ class MultiModuleLateInitCatchKitTest extends AbstractKitTest {
                         }
                     } 
 
-                    pom {
+                    maven.pom {
                         description 'sample'
                     }
                     
@@ -202,7 +202,7 @@ class MultiModuleLateInitCatchKitTest extends AbstractKitTest {
                 }
             }
 
-            project(':mod').pom {
+            project(':mod').maven.pom {
                 description 'sample'
             }                                          
         """)

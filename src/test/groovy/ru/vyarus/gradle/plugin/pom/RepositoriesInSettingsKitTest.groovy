@@ -30,7 +30,7 @@ class RepositoriesInSettingsKitTest extends AbstractKitTest {
                 }
             }
 
-            pomGeneration {
+            maven {
                 forceVersions()
             }
 
@@ -86,7 +86,7 @@ dependencyResolutionManagement {
                 }
             }
 
-            pomGeneration {
+            maven {
                 forceVersions()
             }
 

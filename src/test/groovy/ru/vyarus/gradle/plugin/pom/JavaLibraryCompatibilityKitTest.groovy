@@ -36,7 +36,7 @@ class JavaLibraryCompatibilityKitTest extends AbstractKitTest {
                 }
             }
 
-            pom {
+            maven.pom {
                 developers {
                     developer {
                         id "dev"
