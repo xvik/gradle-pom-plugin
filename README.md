@@ -936,6 +936,87 @@ And pom for modules (`com.sample:test` artifact):
 
 The complete multi-module project example could be generated with [java-library generator](https://github.com/xvik/generator-lib-java).
 
+### Migration from 2.x to 3
+
+The plugin was initially created when maven-publish provides just `withXml` method for manual
+xml manipulation and so plugin used pure closure (like legacy maven plugin did). 
+
+Nowadays maven-publish provides [type-safe pom declaration](https://docs.gradle.org/current/userguide/publishing_maven.html#sec:modifying_the_generated_pom)
+and pom plugin is now using it directly (so it's finally usable for kotlin too).
+
+BEFORE (2.x):
+
+```groovy
+pom {
+    developers {
+        developer {
+            id "dev"
+            name "Dev Dev"
+            email "dev@gmail.com"
+        }
+    } 
+}
+
+withPomXml {
+    appendNode('description', 'A demonstration of maven POM customization') 
+}
+
+pomGeneration {
+    forceVersions() 
+}
+```
+
+NOW (3):
+
+```groovy
+// pomGeneration renamed to maven  
+maven {
+    forceVersions()
+
+    // pom moved to maven and renamed to withPom
+    withPom {
+        developers {
+            developer {
+                id "dev"
+                name "Dev Dev"
+                email "dev@gmail.com"
+            }
+        }
+    }
+
+    // withPomXml moved inside maven and it is an Action<XMLProvider> now!
+    withPomXml {
+        asNode().appendNode('description', 'A demonstration of maven POM customization')
+    }
+}
+```
+
+The example above is exactly equivalent. But it is recommended to move into static pom declaration
+(same as in maven-publish plugin), so config above becomes: 
+
+```groovy 
+maven {
+    forceVersions()
+
+    // withPom was a groovy Closure and pom is an Action for static pom configuration
+    pom {
+        developers {
+            developer {
+                id = "dev"
+                name = "Dev Dev"
+                email = "dev@gmail.com"
+            }
+        }
+    }
+    
+    withPomXml {
+        asNode().appendNode('description', 'A demonstration of maven POM customization')
+    }
+}
+```
+
+NOTE that in pom section all assignments MUST use '='. For more examples [see gradle doc](https://docs.gradle.org/current/userguide/publishing_maven.html#sec:modifying_the_generated_pom).
+
 ### Might also like
 
 * [quality-plugin](https://github.com/xvik/gradle-quality-plugin) - java and groovy source quality checks
