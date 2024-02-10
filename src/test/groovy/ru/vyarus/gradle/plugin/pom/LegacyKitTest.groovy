@@ -1,11 +1,13 @@
 package ru.vyarus.gradle.plugin.pom
 
 import groovy.xml.XmlParser
+import spock.lang.IgnoreIf
 
 /**
  * @author Vyacheslav Rusakov
  * @since 14.01.2020
  */
+@IgnoreIf({jvm.java17Compatible}) // only gradle 7.3 supports java 17  
 class LegacyKitTest extends AbstractKitTest {
 
     String GRADLE_VERSION = '7.0'
