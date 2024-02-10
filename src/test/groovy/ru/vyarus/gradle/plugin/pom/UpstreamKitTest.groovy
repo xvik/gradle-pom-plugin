@@ -8,7 +8,7 @@ import groovy.xml.XmlParser
  */
 class UpstreamKitTest extends AbstractKitTest {
 
-    String GRADLE_VERSION = '8.0'
+    String GRADLE_VERSION = '8.6'
 
     def "Check pom modifications"() {
         setup:
@@ -44,9 +44,9 @@ class UpstreamKitTest extends AbstractKitTest {
             maven.pom {
                 developers {
                     developer {
-                        id "dev"
-                        name "Dev Dev"
-                        email "dev@gmail.com"
+                        id = "dev"
+                        name = "Dev Dev"
+                        email = "dev@gmail.com"
                     }
                 }
             }

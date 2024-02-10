@@ -23,16 +23,22 @@ class PomMergeKitTest extends AbstractKitTest {
             publishing {
                 publications {
                     maven(MavenPublication) {
-                        from components.java
+                        from components.java   
+                        // applied after maven.pom!
                         pom.withXml {
                             asNode().appendNode('name', 'first')
+                            asNode().appendNode('description', 'second')
                         }
                     }
                 }
             }
 
             maven.pom {
-                name 'custom'
+                name = 'custom'
+            }  
+
+            maven.withPom {
+                description 'custom2'
             }
 
             model {
@@ -51,7 +57,8 @@ class PomMergeKitTest extends AbstractKitTest {
         println pomFile.getText()
 
         then: "pom node overridden"
-        pom.name.text() == 'custom'
+        pom.name.text() == 'customfirst'
+        pom.description.text() == 'custom2'
     }
 
     def "Check pom dsl merge (4.8)"() {
@@ -71,9 +78,11 @@ class PomMergeKitTest extends AbstractKitTest {
                     maven(MavenPublication) {
                         from components.java
                         pom {
-                            name = 'first'
+                            name = 'first'     
+                            description = 'second'
                             scm {
-                              url = "http://subversion.example.com/svn/project/trunk/"
+                              url = "http://subversion.example.com/svn/project/trunk/"  
+                              tag = "tag" 
                             }
                         }
                     }
@@ -81,9 +90,16 @@ class PomMergeKitTest extends AbstractKitTest {
             }
 
             maven.pom {
-                name 'custom'
+                name = 'custom'
                 scm {
-                  url "http://google.com"
+                  url = "http://google.com"
+                }
+            }  
+
+            maven.withPom {
+                description 'custom2'
+                scm {
+                  tag "tag2"
                 }
             }
 
@@ -104,7 +120,9 @@ class PomMergeKitTest extends AbstractKitTest {
 
         then: "pom node overridden"
         pom.name.text() == 'custom'
+        pom.description.text() == 'custom2'
         pom.scm.url.text() == 'http://google.com'
+        pom.scm.tag.text() == 'tag2'
     }
 
     def "Check pom tree recognition modifications"() {
@@ -132,7 +150,7 @@ class PomMergeKitTest extends AbstractKitTest {
                 }
             }
 
-            maven.pom {
+            maven.withPom {
                 first {
                     second {
                         val1 '1'

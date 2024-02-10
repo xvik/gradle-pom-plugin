@@ -44,9 +44,9 @@ class LegacyKitTest extends AbstractKitTest {
             maven.pom {
                 developers {
                     developer {
-                        id "dev"
-                        name "Dev Dev"
-                        email "dev@gmail.com"
+                        id = "dev"
+                        name = "Dev Dev"
+                        email = "dev@gmail.com"
                     }
                 }
             }

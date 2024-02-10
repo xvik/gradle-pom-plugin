@@ -42,9 +42,9 @@ class PomPluginKitTest extends AbstractKitTest {
             maven.pom {
                 developers {
                     developer {
-                        id "dev"
-                        name "Dev Dev"
-                        email "dev@gmail.com"
+                        id = "dev"
+                        name = "Dev Dev"
+                        email = "dev@gmail.com"
                     }
                 }
             }
@@ -127,9 +127,9 @@ class PomPluginKitTest extends AbstractKitTest {
                 pom {
                     developers {
                         developer {
-                            id "dev"
-                            name "Dev Dev"
-                            email "dev@gmail.com"
+                            id = "dev"
+                            name = "Dev Dev"
+                            email = "dev@gmail.com"
                         }
                     }
                 }
@@ -191,8 +191,8 @@ class PomPluginKitTest extends AbstractKitTest {
             }
 
             maven.pom {
-                name "override"
-                description "override"
+                name = "override"
+                description = "override"
             }
 
             model {
@@ -296,9 +296,9 @@ class PomPluginKitTest extends AbstractKitTest {
             maven.pom {
                 developers {
                     developer {
-                        id "dev"
-                        name "Dev Dev"
-                        email "dev@gmail.com"
+                        id = "dev"
+                        name = "Dev Dev"
+                        email = "dev@gmail.com"
                     }
                 }
             }
@@ -408,11 +408,11 @@ class PomPluginKitTest extends AbstractKitTest {
             }
 
             maven.pom {
-                name "overridden name"
+                name = "overridden name"
             }
 
             maven.pom {
-                description "overridden desc"
+                description = "overridden desc"
             }
 
             model {

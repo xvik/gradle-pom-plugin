@@ -5,6 +5,7 @@ import groovy.transform.TypeCheckingMode
 import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.XmlProvider
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.ConfigurationContainer
 import org.gradle.api.artifacts.Dependency
@@ -17,7 +18,8 @@ import org.gradle.api.publish.maven.plugins.MavenPublishPlugin
 import ru.vyarus.gradle.plugin.pom.xml.XmlMerger
 
 /**
- * Pom plugin "fixes" maven-publish plugin pom generation: set correct scopes for dependencies.
+ * Pom plugin "fixes" maven-publish plugin pom generation: set correct scopes for dependencies. Also provides
+ * global pom configuration (same as in maven publication, but applied to all publications).
  * <p>
  * Plugin must be applied after java, java-library, groovy plugin or java-platform (used for BOM).
  * <p>
@@ -37,8 +39,21 @@ import ru.vyarus.gradle.plugin.pom.xml.XmlMerger
  * Plugin implicitly activates maven-publish plugin. But publication still must be configured manually:
  * pom plugin only fixes behaviour, but not replace configuration.
  * <p>
- * Plugin adds simplified pom configuration extension. Using pom closure in build new sections could be added
- * to resulted pom. If multiple maven publications configured, pom modification will be applied to all of them.
+ * Plugin provides several pom configurations:
+ * <ul>
+ *     <li>maven.pom - exactly the same as "publication".pom, but applied to all registered publications
+ *     <li>maven.withPom - raw closure without structure (old way)
+ *     <li>maven.withPomXml - same as "publication".pom.withXml, but applied to all registered publications
+ * </ul>
+ * <p>
+ * Execution order:
+ * <ul>
+ *     <li>"publication" pom
+ *     <li>plugin pom
+ *     <li>publication withXml
+ *     <li>plugin withPom
+ *     <li>plugin withPomXml
+ * </ul>
  * <p>
  * NOTE: When used with java-platform no additional configurations applied and no automatic scopes modifications
  * applied to generated pom (user defined modifications (pom and withPomXml blocks) would work as expected).
@@ -50,7 +65,6 @@ import ru.vyarus.gradle.plugin.pom.xml.XmlMerger
 @CompileStatic(TypeCheckingMode.SKIP)
 class PomPlugin implements Plugin<Project> {
 
-    private static final String EXT = 'maven'
     private static final String COMPILE = 'compile'
     private static final String PROVIDED = 'provided'
     private static final String OPTIONAL = 'optional'
@@ -68,7 +82,7 @@ class PomPlugin implements Plugin<Project> {
         // in case when java plugin is not used and maven plugin activated manually
         // (case: using java-platform for BOM publication)
         project.plugins.withType(MavenPublishPlugin) {
-            project.extensions.create(EXT, PomExtension, project)
+            project.extensions.create('maven', PomExtension, project)
             // additional configurations are not useful for BOM
             project.plugins.withType(JavaPlugin) {
                 addConfigurations(project)
@@ -114,6 +128,7 @@ class PomPlugin implements Plugin<Project> {
                         }
                     }
                 }
+                extension.configs.forEach { pom(it) }
                 pom.withXml {
                     Node pomXml = asNode()
                     // do nothing for BOM
@@ -121,7 +136,7 @@ class PomPlugin implements Plugin<Project> {
                         fixPomDependenciesScopes(project, extension, pomXml)
                     }
                     fixDependencyManagement(extension, pomXml)
-                    applyUserPom(project, pomXml)
+                    applyPomModifiers(project, extension, it)
                     if (extension.forcedVersions) {
                         validateVersions(pomXml)
                     }
@@ -203,19 +218,19 @@ class PomPlugin implements Plugin<Project> {
         }
     }
 
-    private void applyUserPom(Project project, Node pomXml) {
-        PomExtension pomExt = project.extensions.findByName(EXT)
-        // multiple pom configuration blocks could be used (especially in multi-module environment)
-        pomExt.configs.each {
-            XmlMerger.mergePom(pomXml, it)
+    private void applyPomModifiers(Project project, PomExtension pomExt, XmlProvider pomProvider) {
+        Node pom = pomProvider.asNode()
+        pomExt.rawConfigs.each {
+            XmlMerger.mergePom(pom, it)
         }
-        pomExt.xmlModifiers.each { it.call(pomXml) }
+
+        pomExt.xmlModifiers.each { it.execute(pomProvider) }
         // apply defaults if required
-        if (!pomXml.name) {
-            pomXml.appendNode('name', project.name)
+        if (!pom.name) {
+            pom.appendNode('name', project.name)
         }
-        if (project.description && !pomXml.description) {
-            pomXml.appendNode('description', project.description)
+        if (project.description && !pom.description) {
+            pom.appendNode('description', project.description)
         }
     }
 

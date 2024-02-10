@@ -34,8 +34,8 @@ class GradleNativeBOMKitTest extends AbstractKitTest {
             maven.pom {
                 developers {
                     developer {
-                        id 'jdoe'
-                        name 'John Doe'
+                        id = 'jdoe'
+                        name = 'John Doe'
                     }
                 }
             }

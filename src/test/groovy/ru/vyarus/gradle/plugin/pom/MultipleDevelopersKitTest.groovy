@@ -28,7 +28,7 @@ class MultipleDevelopersKitTest extends AbstractKitTest {
                 }
             }
 
-            maven.pom {
+            maven.withPom {
                 developers {
                     developer {
                         id "dev1"

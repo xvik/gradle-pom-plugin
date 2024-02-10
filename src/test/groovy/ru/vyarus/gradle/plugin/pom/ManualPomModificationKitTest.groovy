@@ -26,11 +26,11 @@ class ManualPomModificationKitTest extends AbstractKitTest {
             
             maven {
                 pom {
-                    name "override"
+                    name = "override"
                 }
     
                 withPomXml {
-                    it.appendNode('tata', 'blabla')
+                    asNode().appendNode('tata', 'blabla')
                 }
             }
 
@@ -72,15 +72,15 @@ class ManualPomModificationKitTest extends AbstractKitTest {
             
             maven {
                 pom {
-                    name "override"
+                    name = "override"
                 }
     
                 withPomXml {
-                    it.appendNode('tata', 'blabla')
+                    asNode().appendNode('tata', 'blabla')
                 }
     
                 withPomXml {
-                    it.appendNode('baba', 'ablabl')
+                    asNode().appendNode('baba', 'ablabl')
                 }      
             }
 
