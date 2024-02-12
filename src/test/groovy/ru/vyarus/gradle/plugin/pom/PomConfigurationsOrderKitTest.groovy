@@ -64,7 +64,7 @@ class PomConfigurationsOrderKitTest extends AbstractKitTest {
         println pomFile.getText()
 
         then: "defaults applied"
-        res.output.contains("""> Configure project :
+        unifyString(res.output).contains("""> Configure project :
 publication pom
 plugin pom
 
