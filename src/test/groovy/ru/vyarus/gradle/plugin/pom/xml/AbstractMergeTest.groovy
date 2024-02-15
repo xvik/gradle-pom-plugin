@@ -1,5 +1,6 @@
 package ru.vyarus.gradle.plugin.pom.xml
 
+import groovy.xml.XmlParser
 import groovy.xml.XmlUtil
 import spock.lang.Specification
 
@@ -16,11 +17,7 @@ abstract class AbstractMergeTest extends Specification {
     }
 
     static String xml(Node base) {
-        def res = "\n" + XmlUtil.serialize(base)
-                .replaceAll("\r", "")
-                // on java 11 groovy inserts blank lines between tags
-                .replaceAll('\n {1,}\n', '\n')
-                .replaceAll(" +\n", "\n")
+        def res = XmlUtils.toString(base)
         println res
         res
     }

@@ -5,7 +5,9 @@
     - old pom convention moved to maven.withPom (exactly the same as before)
     - old withPomXml convention moved to maven withPomXml, but now its now an Action<XmlProvider>
       (same as publication.pom.withXml) and so asNode() must now be called manually (instead of it)
-- Add static pom configuration: maven.pom. This is exactly the same as publication.pom (compatible with kotlin)
+* Add type-safe pom configuration: maven.pom. This is exactly the same as publication.pom (compatible with kotlin)
+* Add debug option (maven.debug()) to show performed xml modifications
+    - Pom model diff (for maven.pom configurations) shown only for gralde 8.4 and above 
     
 Migration: 
 - Rename pomGeneration{} into maven{}

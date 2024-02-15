@@ -37,7 +37,9 @@ class PomPluginKitTest extends AbstractKitTest {
                         from components.java
                     }
                 }
-            }
+            }    
+
+            maven.debug()
             
             maven.pom {
                 developers {
@@ -57,6 +59,7 @@ class PomPluginKitTest extends AbstractKitTest {
         """)
 
         when: "run pom task"
+        debug()
         run('generatePomFileForMavenPublication')
 
         def pomFile = file("build/generated-pom.xml")

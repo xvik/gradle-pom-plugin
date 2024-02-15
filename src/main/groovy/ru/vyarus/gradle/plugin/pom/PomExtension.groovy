@@ -65,16 +65,20 @@ import org.gradle.api.publish.maven.MavenPom
  * @since 27.05.2021
  */
 @CompileStatic
+@SuppressWarnings('ConfusingMethodName')
 class PomExtension {
 
     boolean forcedVersions
     boolean removedDependencyManagement
     boolean disabledScopesCorrection
     boolean disabledBomsReorder
+    boolean debug
 
     protected List<Action<? super MavenPom>> configs = []
+    protected boolean configsApplied
     protected List<Closure> rawConfigs = []
     protected List<Action<? super XmlProvider>> xmlModifiers = []
+    protected boolean xmlConfigsApplied
 
     // in multi-module project used for incorrect initialization detection when sub module's convention
     // wasn't initialized and root module's convention used (hard to track problems)
@@ -133,6 +137,14 @@ class PomExtension {
     }
 
     /**
+     * Enable debug logs.
+     * Pom model diff is shown only for gradle 8.4 and above.
+     */
+    void debug() {
+        debug = true
+    }
+
+    /**
      * Exactly the same as pom configuration in publication, but applied to all publications.
      * <p>
      * ATTENTION: All properties assignment must be done with '='
@@ -140,6 +152,9 @@ class PomExtension {
      * @param config configuration action
      */
     void pom(Action<? super MavenPom> config) {
+        if (configsApplied) {
+            throw new IllegalStateException('Too late maven.pom() appliance: configuration already applied')
+        }
         this.configs.add(config)
     }
 
@@ -152,6 +167,9 @@ class PomExtension {
      * @param config user pom
      */
     void withPom(Closure config) {
+        if (xmlConfigsApplied) {
+            throw new IllegalStateException('Too late maven.withPom() appliance: configuration already applied')
+        }
         this.rawConfigs.add(config)
     }
 
@@ -162,6 +180,9 @@ class PomExtension {
      * @param modifier manual pom modification closure
      */
     void withPomXml(Action<? super XmlProvider> modifier) {
+        if (xmlConfigsApplied) {
+            throw new IllegalStateException('Too late maven.withPomXml() appliance: configuration already applied')
+        }
         this.xmlModifiers.add(modifier)
     }
 }

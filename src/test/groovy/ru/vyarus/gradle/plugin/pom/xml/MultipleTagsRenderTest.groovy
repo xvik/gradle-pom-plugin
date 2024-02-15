@@ -1,7 +1,5 @@
 package ru.vyarus.gradle.plugin.pom.xml
 
-import groovy.xml.XmlUtil
-
 /**
  * @author Vyacheslav Rusakov
  * @since 28.07.2016
