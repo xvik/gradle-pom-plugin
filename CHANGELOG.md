@@ -7,7 +7,8 @@
       (same as publication.pom.withXml) and so asNode() must now be called manually (instead of it)
 * Add type-safe pom configuration: maven.pom. This is exactly the same as publication.pom (compatible with kotlin)
 * Add debug option (maven.debug()) to show performed xml modifications
-    - Pom model diff (for maven.pom configurations) shown only for gralde 8.4 and above 
+    - Pom model diff (for maven.pom configurations) shown only for gralde 8.4 and above
+* Configuration cache compatibility
     
 Migration: 
 - Rename pomGeneration{} into maven{}

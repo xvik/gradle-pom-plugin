@@ -107,6 +107,7 @@ class DebugKitTest extends AbstractKitTest {
 
         then: "defaults applied"
         pom.name.text() != null
+        !pom.name.text().empty
         pom.description.text() == 'sample description'
 
         then: 'debug logs correct'
@@ -334,6 +335,7 @@ POM> --------------------------------- Applied direct XML changes for maven publ
         """)
 
         when: "run pom task"
+        debug()
         BuildResult result = run('generatePomFileForBOMPublication')
 
         def pomFile = file("build/generated-pom.xml")

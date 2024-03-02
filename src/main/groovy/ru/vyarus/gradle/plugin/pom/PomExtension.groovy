@@ -2,7 +2,6 @@ package ru.vyarus.gradle.plugin.pom
 
 import groovy.transform.CompileStatic
 import org.gradle.api.Action
-import org.gradle.api.Project
 import org.gradle.api.XmlProvider
 import org.gradle.api.publish.maven.MavenPom
 
@@ -75,19 +74,9 @@ class PomExtension {
     boolean debug
 
     protected List<Action<? super MavenPom>> configs = []
-    protected boolean configsApplied
     protected List<Closure> rawConfigs = []
     protected List<Action<? super XmlProvider>> xmlModifiers = []
-    protected boolean xmlConfigsApplied
-
-    // in multi-module project used for incorrect initialization detection when sub module's convention
-    // wasn't initialized and root module's convention used (hard to track problems)
-    private final String projectPath
-
-    PomExtension(Project project) {
-        // project name where convention was registered
-        projectPath = project.path
-    }
+    protected boolean configsApplied
 
     /**
      * Force dependency versions in the generated pom. Useful when gradle platforms used (by default generated pom
@@ -167,7 +156,7 @@ class PomExtension {
      * @param config user pom
      */
     void withPom(Closure config) {
-        if (xmlConfigsApplied) {
+        if (configsApplied) {
             throw new IllegalStateException('Too late maven.withPom() appliance: configuration already applied')
         }
         this.rawConfigs.add(config)
@@ -180,9 +169,25 @@ class PomExtension {
      * @param modifier manual pom modification closure
      */
     void withPomXml(Action<? super XmlProvider> modifier) {
-        if (xmlConfigsApplied) {
+        if (configsApplied) {
             throw new IllegalStateException('Too late maven.withPomXml() appliance: configuration already applied')
         }
         this.xmlModifiers.add(modifier)
+    }
+
+    protected PomExtension copy() {
+        // no more changes allowed (they could not be applied)
+        configsApplied = true
+        return new PomExtension(
+                forcedVersions: forcedVersions,
+                removedDependencyManagement: removedDependencyManagement,
+                disabledScopesCorrection: disabledScopesCorrection,
+                disabledBomsReorder: disabledBomsReorder,
+                debug: debug,
+
+                configs: configs,
+                rawConfigs: rawConfigs,
+                xmlModifiers: xmlModifiers
+        )
     }
 }
