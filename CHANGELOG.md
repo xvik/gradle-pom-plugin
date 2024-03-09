@@ -18,6 +18,8 @@ Migration:
       (this would be EXACTLY the same as pom configuration in publication)
 - Rename withPomXml{} into maven.withPomXml{} and replace 'it' with 'asNode()'
 
+([full migration doc](https://github.com/xvik/gradle-pom-plugin?tab=readme-ov-file#migration-from-2x-to-3))
+
 ### 2.2.2 (2022-11-09)
 * Fix fail when repositories declared in settings file only (#35)
   Now, when forceVersions() enabled, plugin will check versions in the generated pom 
