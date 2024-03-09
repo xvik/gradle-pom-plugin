@@ -1,10 +1,10 @@
 ### 3.0.0 (2024-03-09)
 * (BREAKING) Drop gradle 5 and 6 support
     - remove compile and runtime configurations support (were deprecated, now removed in gradle) 
-* (BREAKING) Convention merged with extension (due to conventions deprecation):
+* (BREAKING) Conventions merged with extension (due to conventions deprecation):
     - pomGeneration extension renamed to maven
     - old pom convention moved to maven.withPom (exactly the same as before)
-    - old withPomXml convention moved to maven withPomXml, but it's now an Action<XmlProvider>
+    - old withPomXml convention moved to maven.withPomXml, but it's now an Action<XmlProvider>
       (same as publication.pom.withXml) and so asNode() must now be called manually (instead of it)
 * Add type-safe pom configuration: maven.pom. This is exactly the same as publication.pom (compatible with kotlin)
 * Add debug option (maven.debug()) to show performed xml modifications
