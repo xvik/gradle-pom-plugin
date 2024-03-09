@@ -19,12 +19,14 @@ Features:
     - Fix [war](https://docs.gradle.org/current/userguide/war_plugin.html#sec:war_dependency_management) plugin's provided dependencies
 * Add `provided` and `optional` configuration (in maven meaning).    
 * Add global pom configuration shortcuts (applied to all publications):
-    - [pom](#pom-configuration) configuration closure (applied to all publications).
-    - [withPomXml](#manual-pom-modification) configuration closure for manual xml modifications (same as maven-publish's withXml, but applied for all publications)
+    - [maven.pom](#pom-configuration) type-safe pom configuration (same as in publication object)  
+    - [maven.pomXml](#pom-configuration) configuration closure (applied to all publications).
+    - [maven.withPomXml](#manual-pom-modification) configuration closure for manual xml modifications (same as maven-publish's withXml, but applied for all publications)
 * Moves declared BOMs on top in the generated dependencyManagement section (fixes java-platform behaviour)
 * Automatic pom enhancements [could be disabled](#pom-generation-options) to see the native gradle behaviour)
 * Optionally, could remove used BOMs, applying resolved versions instead (useful with gradle platforms to simplify resulted poms)
 * Simplifies [multi-module projects configuration](#multi-module-projects)
+* [Easy debug](#debug) (could show all applied modifications)
 * Compatible with:
     - Gradle java, groovy and [java-library](https://docs.gradle.org/current/userguide/java_library_plugin.html) plugin
     - Gradle [java-platform](https://docs.gradle.org/current/userguide/java_platform_plugin.html) plugin (BOM case)   
@@ -42,7 +44,7 @@ all plugins configured.
 
 ##### Summary
 
-* Configuration closures: `pom`, `pomGeneration`, `withPomXml`  
+* Configuration closure: `maven`  
 * Configurations: `provided`, `optional`
 * Enable plugins: [maven-publish](https://docs.gradle.org/current/userguide/publishing_maven.html)
 
@@ -57,7 +59,7 @@ buildscript {
         gradlePluginPortal()
     }
     dependencies {
-        classpath 'ru.vyarus:gradle-pom-plugin:2.2.2'
+        classpath 'ru.vyarus:gradle-pom-plugin:3.0.0'
     }
 }
 apply plugin: 'ru.vyarus.pom'
@@ -67,17 +69,18 @@ OR
 
 ```groovy
 plugins {
-    id 'ru.vyarus.pom' version '2.2.2'
+    id 'ru.vyarus.pom' version '3.0.0'
 }
 ```
 
 #### Compatibility
 
-Plugin compiled for java 8, compatible with java 11.
+Plugin compiled for java 8, compatible with java 17.
 
 Gradle | Version
 --------|-------
-5.0     | 2.2.2
+7.0     | 3.0.0
+5.0     | [2.2.2]((https://github.com/xvik/gradle-pom-plugin/tree/2.2.2)
 4.6     | [1.3.0](https://github.com/xvik/gradle-pom-plugin/tree/1.3.0)
 older   | [1.2.0](https://github.com/xvik/gradle-pom-plugin/tree/1.2.0)
 
@@ -134,6 +137,8 @@ For gradle 6.0 and above:
 </details>  
 
 ### Usage
+
+**NOTE**: in version 3.0 old conventions were replaced by configuration extension - see [migration guide](#migration-from-2x-to-3) 
 
 If [java](https://docs.gradle.org/current/userguide/java_plugin.html),
 [groovy](https://docs.gradle.org/current/userguide/groovy_plugin.html), 
@@ -208,9 +213,7 @@ Plugin fixes dependencies scopes in the generated pom:
  api       | compile   | compile |  ony with [java-library](https://docs.gradle.org/current/userguide/java_library_plugin.html#sec:java_library_separation) plugin 
  implementation | **compile** |  runtime |   
  compileOnly       |  -   | dependencies not added |   
- runtimeOnly        | runtime | runtime |    
- *compile*   | compile | compile |  *removed in gradle 7*
- *runtime*   | **runtime**  | compile | *removed in gradle 7*
+ runtimeOnly        | runtime | runtime |
  providedCompile | **provided** | compile | only with [war](https://docs.gradle.org/current/userguide/war_plugin.html#sec:war_dependency_management) plugin
  providedRuntime | **provided** | compile | only with [war](https://docs.gradle.org/current/userguide/war_plugin.html#sec:war_dependency_management) plugin
 
@@ -409,58 +412,87 @@ Probably, there is a way to workaround this, but, still, simple things must be d
 #### Pom configuration
 
 By default, `maven-publish` plugin fills pom only with dependencies and artifact id, group and version. 
-Other information could be configured through `pom` closure:
+Other information could be configured through `pom` object:
 
 ```groovy
-pom {
-    name 'Project Name'
-    description 'My awesome project'
-    licenses {
-        license {
-            name "The MIT License"
-            url "http://www.opensource.org/licenses/MIT"
-            distribution 'repo'
+maven {
+    pom {
+        name = 'Project Name'
+        description = 'My awesome project'
+        licenses {
+            license {
+                name = "The MIT License"
+                url = "http://www.opensource.org/licenses/MIT"
+                distribution = 'repo'
+            }
         }
-    }
-    scm {
-        url 'https://github.com/me/my-repo.git'
-        connection 'scm:git@github.com:me/my-repo.git'
-        developerConnection 'scm:git@github.com:me/my-repo.git'
-    }
-    developers {
-        developer {
-            id "dev1"
-            name "Dev1 Name"
-            email "dev1@email.com"
+        scm {
+            url = 'https://github.com/me/my-repo.git'
+            connection = 'scm:git@github.com:me/my-repo.git'
+            developerConnection = 'scm:git@github.com:me/my-repo.git'
+        }
+        developers {
+            developer {
+                id = "dev1"
+                name = "Dev1 Name"
+                email = "dev1@email.com"
+            }
         }
     }
 }
 ```
 
-Closure doesn't restrict structure: any tags may be used. 
+NOTE: this is type-safe pom configuration (compatible with kotlin). **The same** object used as in direct 
+[publication configuration](https://docs.gradle.org/current/userguide/publishing_maven.html#sec:modifying_the_generated_pom),
+but this one is applied to all publications.
+Pay attention that `=` used for assignments.
+      
 
-If `name` and `description` not specified, they will be applied implicitly from `project.name` and `project.description`.
+##### Non-standard pom tags 
+
+In the option above, only pre-defined properties could be applied, but if you need 
+(for whatever reason) to add some custom tags, then you can use groovy closure:
+
+```groovy
+maven {
+    pomXml {
+        name 'Project Name'
+        description 'My awesome project'
+        licenses {
+            license {
+                name "The MIT License"
+                url "http://www.opensource.org/licenses/MIT"
+                distribution 'repo'
+            }
+        }
+        whateverTag 'something'
+        whateverSection {
+            whateverElse 12 
+        }
+    }
+}
+```
+
+Closure doesn't restrict structure: any tags may be used.
+
+NOTE: for `pomXml` groovy closure is used and so all properties configured with a method call:
+it would be a mistake to use `=` there.
 
 Here is a [complete example](https://github.com/xvik/gradle-pom-plugin/blob/master/src/test/groovy/ru/vyarus/gradle/plugin/pom/PomSectionsTest.groovy#L28)
 of all possible maven pom sections definition (you can use any tags if needed, not just these).
 
-If pom already have some tags (e.g. set manually with withXml or by some plugin), plugin will *override values* and *properly merge* pom.
-*No duplicate tags will be created.*
+INFO: `pomXml` option is a legacy plugin mechanism (developed in times when maven-publish plugin does not 
+provide anything except direct pom modification). Before pom plugin version 3.0 this was the main configuration 
+(applied with `pom` convention)
 
-*Multiple `pom` closures may be defined* (useful for multi-module projects).
+###### Clashed tag names
 
-If [multiple publications](https://docs.gradle.org/current/userguide/publishing_maven.html#N17EB8) declared, 
-then pom closure will affect *all of them*. If you need different data in poms then use pom closure only
-for general info and [gradle native dsl](#gradle-pom-dsl) for different parts.
-
-##### Clashed tag names
-
-As `pom` closure is normal groovy closure, you may face situations when tag name clash with some method in your gradle project.
+As `pomXml` closure is normal groovy closure, you may face situations when tag name clash with some method in your gradle project.
 
 By default, there is only one such case:
 
 ```groovy
-pom {
+maven.pomXml {
     parent {
         name 'name'
         relativePath 'path'
@@ -470,11 +502,11 @@ pom {
 
 `relativePath` tag will not be present in resulted pom, because it clashes with gradle [Project.relativePath](https://docs.gradle.org/current/dsl/org.gradle.api.Project.html#org.gradle.api.Project:relativePath(java.lang.Object)) method
 and it will be called instead of "just holding" tag name.
- 
-Special prefix '_' may be used in such cases: 
+
+Special prefix '_' may be used in such cases:
 
 ```groovy
-pom {
+maven.pomXml {
     parent {
         name 'name'
         _relativePath 'path'
@@ -482,10 +514,24 @@ pom {
 }
 ```
 
-This prefix will solve clash with real method and will be dropped during xml generation. You can use this prefix with any tag. 
+This prefix will solve clash with real method and will be dropped during xml generation. You can use this prefix with any tag.
 
-Another (standard) solution for this problem is using [delegate](http://groovy-lang.org/closures.html#closure-owner) reference: `delegate.relativePath`. 
+Another (standard) solution for this problem is using [delegate](http://groovy-lang.org/closures.html#closure-owner) reference: `delegate.relativePath`.
 But, for me, solution with prefix is simpler and easier to read.
+
+
+##### Defaults
+
+If `name` and `description` not specified, they will be applied implicitly from `project.name` and `project.description`.
+
+If pom already have some tags (e.g. set manually with withXml or by some plugin), plugin will *override values* and *properly merge* pom.
+*No duplicate tags will be created.*
+
+*Multiple `pom`, `pomXml` (and `withPomXml`) configurations may be defined* (useful for multi-module projects).
+
+If [multiple publications](https://docs.gradle.org/current/userguide/publishing_maven.html#N17EB8) declared, 
+then pom configuration will affect *all of them*. If you need different data in poms then use pom closure only
+for general info and [gradle native dsl](#gradle-pom-dsl) for different parts.
 
 ##### Testing
 
@@ -502,49 +548,99 @@ Pom will be generated by default in `build/publications/mavenJava/pom-default.xm
 #### Manual pom modification
 
 If, for any reason, you need to modify pom manually (like in [withXml closure](https://docs.gradle.org/current/userguide/publishing_maven.html#sec:modifying_the_generated_pom))
-you can use `withPomXml` configuration closure:
+you can use `withPomXml` configuration action:
 
 ```groovy
-pom {
-    scm {
-        url 'https://github.com/me/my-repo.git'
-        connection 'scm:git@github.com:me/my-repo.git'
-        developerConnection 'scm:git@github.com:me/my-repo.git'
-    }    
-}
+maven {
+    pom {
+        scm {
+            url = 'https://github.com/me/my-repo.git'
+            connection = 'scm:git@github.com:me/my-repo.git'
+            developerConnection = 'scm:git@github.com:me/my-repo.git'
+        }
+    }
 
-withPomXml {
-    it.appendNode('description', 'A demonstration of maven POM customization')
+    withPomXml {
+        asNode().appendNode('description', 'A demonstration of maven POM customization')
+    }
 }
 ```
 
-Generated pom xml passed to closure as parameter (no need to call asNode() as in gradle withXml block), so block above could declare parameter explicitly
-
-```groovy
-withPomXml { Node node ->
-    node.appendNode('description', 'A demonstration of maven POM customization')
-}
-```
+`withPomXml` action is exactly the same as [withXml in publication](https://docs.gradle.org/current/dsl/org.gradle.api.publish.maven.MavenPom.html#org.gradle.api.publish.maven.MavenPom:withXml(org.gradle.api.Action))
 
 See [Node api](http://docs.groovy-lang.org/latest/html/api/groovy/util/Node.html) and [groovy xml guide](http://groovy-lang.org/processing-xml.html#_manipulating_xml).
 
-*Multiple `withPomXml` closures could be used* (useful for multi-module projects).
+*Multiple `withPomXml` actions could be used* (useful for multi-module projects).
 
-`withPomXml` called just after `pom` closure merging into main pom, but before applying default name and description (because you may define them manually).
+`withPomXml` called after `pom` and `withPom` actions merging into main pom, but before applying default name and description (because you may define them manually).
 So xml Node passed into closure contains all modification applied by the plugin (except default name and description).
 
 **NOTE** pom plugin uses [withXml](https://docs.gradle.org/current/userguide/publishing_maven.html#sec:modifying_the_generated_pom) to apply pom modifications. 
 If other plugins use withXml too and these plugins registered after pom plugin, then their xml modification will be executed after pom plugin and after `withPomXml` block.
 Most likely, this will not be an issue, but just keep it in mind when using manual xml modifications.
 
+#### Pom configurations order
+
+Pom could be modified within publication (maven-publish plugin `pom` and `withXml`)
+and withing 3 blocks in pom plugin: `maven.pom`, `maven.withPom` and `maven.withPomXml`:
+
+```groovy
+publishing {
+    publications {
+        maven(MavenPublication) {
+            from components.java  
+
+            // (1)
+            pom {
+               ...
+            }
+
+            // (2)
+            pom.withXml {
+                ...
+            }
+        }
+    }
+}
+
+maven {
+    // (3)
+    pom {
+        ...
+    }
+    // (4)
+    withPom {
+        ...
+    }
+    // (5)
+    withPomXml {
+        ...
+    }
+}
+```
+
+Configuration order:
+
+1. Publication pom (static) (1)
+2. Plugin static pom (3)
+3. Publication withXml (2)
+4. Plugin withPom (4)
+5. Plugin withPomXml (5)
+
+The reason for this is: (1) and (3) are static model changes (which are then generated into xml node),
+so they execute earlier.
+
+(4) and (5) are applied within publication `withXml` block and so couldn't be execured before `withXml` 
+declared directly within publication (2).
+
 #### Pom generation options
 
-Plugin behaviour could be controlled with `pomGeneration` closure.
+Plugin behaviour could be controlled with `maven` configuration's methods.
 
 For example, to disable scopes correction:
 
 ```groovy
-pomGeneration {
+maven {
     disableScopesCorrection()
 }
 ```
@@ -607,7 +703,7 @@ Note that dependency version is not set (assuming resolution through bom).
 In order to force dependency versions use:
 
 ```groovy
-pomGeneration {
+maven {
     forceVersions()
 }
 ```
@@ -615,7 +711,7 @@ pomGeneration {
 To completely remove dependency management section from generated pom:
 
 ```groovy
-pomGeneration {
+maven {
     removeDependencyManagement()
 }
 ```
@@ -670,10 +766,10 @@ plugins {
     id 'ru.vyarus.java-lib'
 }
 
-pom {
-    name 'first'
+maven.pom {
+    name = 'first'
     scm {
-      url "http://subversion.example.com/svn/project/trunk/"
+      url = "http://subversion.example.com/svn/project/trunk/"
     }
 }
 ```  
@@ -705,10 +801,10 @@ publishing {
     }
 }
 
-pom {
-    name 'custom name'
+maven.pom {
+    name = 'custom name'
     scm {
-      url "http://custom.url/"
+      url = "http://custom.url/"
     }
 }
 ```
@@ -795,9 +891,9 @@ dependencies {
 }
 
 // without it root project's name and description would be used
-pom {
-    name 'test-bom'
-    description 'Test project BOM'
+maven.pom {
+    name = 'test-bom'
+    description = 'Test project BOM'
 }
 
 publishing {
@@ -817,16 +913,13 @@ allprojects {
 
     group = 'com.sample'
     
-    // delay required because otherwise pom closure would be applied before java plugin activation
-    afterEvaluate {
-        // general pom info, required for all poms (including BOM)
-        pom {
-            developers {
-                developer {
-                    id 'johnd'
-                    name 'John Doe'
-                    email 'johnd@somemail.com'
-                }
+    // general pom info, required for all poms (including BOM)
+    maven.pom {
+        developers {
+            developer {
+                id = 'johnd'
+                name = 'John Doe'
+                email = 'johnd@somemail.com'
             }
         }
     }
@@ -854,7 +947,7 @@ subprojects {
     }
 
     // use only direct dependencies in the generated pom, removing BOM
-    pomGeneration {
+    maven {
         removeDependencyManagement()
     }
  
@@ -936,12 +1029,145 @@ And pom for modules (`com.sample:test` artifact):
 
 The complete multi-module project example could be generated with [java-library generator](https://github.com/xvik/generator-lib-java).
 
+### Debug
+
+Plugin could print all xml changes to simplify debugging. 
+
+To enable debug:
+
+```groovy
+maven {
+    debug()
+}
+```
+
+For example, enabling debug for a build like this:
+
+```groovy
+plugins {
+    id 'java'
+    id 'ru.vyarus.pom'
+}
+
+group 'ru.vyarus'
+version 1.0
+description 'sample description'
+
+dependencies {                                         
+    // compile
+    implementation 'org.javassist:javassist:3.16.1-GA'         
+    provided 'com.google.code.findbugs:annotations:3.0.0'
+    // runtime
+    runtimeOnly 'ru.vyarus:guice-ext-annotations:1.1.1'  
+    optional 'ru.vyarus:generics-resolver:2.0.0'
+    // disappear    
+    compileOnly 'junit:junit:4.12'
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            from components.java
+        }
+    }
+}    
+
+maven {
+    debug()
+
+    pom {
+        developers {
+            developer {
+                id = "dev"
+                name = "Dev Dev"
+                email = "dev@gmail.com"
+            }
+        }
+    }
+
+    withPom {
+        scm {
+            url 'http://sdsds.dd'
+        }
+    }
+
+
+    withPomXml {
+        asNode().appendNode('inceptionYear', 2020)
+    }
+}
+```
+
+Would print:
+
+```
+> Configure project :
+POM> Apply 1 pom model customizations for maven publication
+
+POM> --------------------------------- Applied XML model changes for maven publication
+	  10 |   <artifactId>spock_Check_pom_modificat_0_testProjectDir16654992632092536392</artifactId>
+	  11 |   <version>1.0</version>
+	  12 | +  <developers>+
+	  13 | +    <developer>+
+	  14 | +      <id>dev</id>+
+	  15 | +      <name>Dev Dev</name>+
+	  16 | +      <email>dev@gmail.com</email>+
+	  17 | +    </developer>+
+	  18 | +  </developers>+
+     --------------------------------
+
+> Task :generatePomFileForMavenPublication
+POM> Correct compile dependencies for maven publication
+	 - org.javassist:javassist:3.16.1-GA (original scope: runtime)
+	 - com.google.code.findbugs:annotations:3.0.0 (original scope: runtime)
+	 - ru.vyarus:generics-resolver:2.0.0 (original scope: runtime)
+
+POM> Correct optional dependencies for maven publication
+	 - ru.vyarus:generics-resolver:2.0.0 (original scope: compile)
+
+POM> Correct provided dependencies for maven publication
+	 - com.google.code.findbugs:annotations:3.0.0 (original scope: compile)
+
+POM> Apply 1 withXml closures for maven publication
+POM> Apply 1 withPomXml customizations for maven publication
+POM> Apply default name for maven publication
+POM> Apply default description for maven publication
+
+POM> --------------------------------- Applied direct XML changes for maven publication
+	  16 |       <artifactId>javassist</artifactId>
+	  17 |       <version>3.16.1-GA</version>
+	  18 |       -<scope>runtime<-+<scope>compile<+/scope>
+	
+	  22 |       <artifactId>annotations</artifactId>
+	  23 |       <version>3.0.0</version>
+	  24 |       -<scope>runtime<-+<scope>provided<+/scope>
+	
+	  28 |       <artifactId>generics-resolver</artifactId>
+	  29 |       <version>2.0.0</version>
+	  30 |       -<scope>runtime<-+<scope>compile<+/scope>
+	  31 | +      <optional>true</optional>+
+	
+	  38 |     </dependency>
+	  39 |   </dependencies>
+	  40 | +  <scm>+
+	  41 | +    <url>http://sdsds.dd</url>+
+	  42 | +  </scm>+
+	  43 | +  <inceptionYear>2020</inceptionYear>+
+	  44 | +  <name>spock_Check_pom_modificat_0_testProjectDir16654992632092536392</name>+
+	  45 | +  <description>sample description</description>+
+     --------------------------------
+```
+
+NOTE: changes for `pom` block (first xml diff) would be shown only starting from gradle 8.4
+
+Xml changes declared directly in publication are not tracked (couldn't be)!
+
 ### Migration from 2.x to 3
 
 The plugin was initially created when maven-publish provides just `withXml` method for manual
 xml manipulation and so plugin used pure closure (like legacy maven plugin did). 
 
-Nowadays maven-publish provides [type-safe pom declaration](https://docs.gradle.org/current/userguide/publishing_maven.html#sec:modifying_the_generated_pom)
+Nowadays, maven-publish provides [type-safe pom declaration](https://docs.gradle.org/current/userguide/publishing_maven.html#sec:modifying_the_generated_pom)
 and pom plugin is now using it directly (so it's finally usable for kotlin too).
 
 BEFORE (2.x):
