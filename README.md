@@ -485,6 +485,84 @@ INFO: `pomXml` option is a legacy plugin mechanism (developed in times when mave
 provide anything except direct pom modification). Before pom plugin version 3.0 this was the main configuration 
 (applied with `pom` convention)
 
+###### Duplicate xml sections detection
+
+Groovy closure (`pomXml`) could also be useful when you want to avoid duplicates.
+
+For example, static model would always apply specified sections: 
+
+```groovy
+maven.pom {
+    developers {
+        developer {
+            id = 'test'
+            name = 'Test Test'
+        }
+    }
+}
+
+maven.pom {
+    developers {
+        developer {
+            id = 'test'
+            name = 'Test Test'
+        }
+    }
+}
+```
+
+This would produce duplicate in the resulted xml:
+
+
+```xml
+<developers>
+    <developer>
+        <id>test</id>
+        <name>Test Test</name>
+    </developer>
+    <developer>
+        <id>test</id>
+        <name>Test Test</name>
+    </developer>
+</developers>
+```
+
+Whereas groovy closure:
+
+```groovy
+maven.pomXml {
+    developers {
+        developer {
+            id 'test'
+            name 'Test Test'
+        }
+    }
+}
+
+maven.pomXml {
+    developers {
+        developer {
+            id 'test'
+            name 'Test Test'
+        }
+    }
+}
+```
+
+Would correctly detect duplication and the resulted xml would be:
+
+```xml
+<developers>
+    <developer>
+        <id>test</id>
+        <name>Test Test</name>
+    </developer>
+</developers>
+```
+
+It is a very rare requirement to avoid duplications (appeared when pom is configured from multiple places),
+but still could appear, and, in this case, groovy closue (`pomXml`) could be very useful.
+
 ###### Clashed tag names
 
 As `pomXml` closure is normal groovy closure, you may face situations when tag name clash with some method in your gradle project.

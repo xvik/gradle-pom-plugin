@@ -152,6 +152,8 @@ class PomExtension {
      * be specified like this.
      * <p>
      * ATTENTION: All properties assignment must be done as "method" - does not contain '='!
+     * <p>
+     * NOTE: Duplicate sections would be detected and merged automatically (like developers).
      *
      * @param config user pom
      */
