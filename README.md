@@ -992,12 +992,18 @@ allprojects {
     group = 'com.sample'
     
     // general pom info, required for all poms (including BOM)
-    maven.pom {
-        developers {
-            developer {
-                id = 'johnd'
-                name = 'John Doe'
-                email = 'johnd@somemail.com'
+
+    // such delay is required because java-lib (and java) plugin would be applied only
+    // in the subprojects section and so this would configure root project configuration
+    // without delay
+    plugins.withId('java') {
+        maven.pom {
+            developers {
+                developer {
+                    id = 'johnd'
+                    name = 'John Doe'
+                    email = 'johnd@somemail.com'
+                }
             }
         }
     }
