@@ -93,36 +93,20 @@ older   | [1.2.0](https://github.com/xvik/gradle-pom-plugin/tree/1.2.0)
 * Select `Commits` section and click `Get it` on commit you want to use (you may need to wait while version builds if no one requested it before)
     or use `master-SNAPSHOT` to use the most recent snapshot
 
-For gradle before 6.0 use `buildscript` block with required commit hash as version:
-
-```groovy
-buildscript {
-    repositories {
-        maven { url 'https://jitpack.io' }
-    }
-    dependencies {
-        classpath 'ru.vyarus:gradle-pom-plugin:b5a8aee24f'
-    }
-}
-apply plugin: 'ru.vyarus.pom'
-```
-
-For gradle 6.0 and above:
-
-* Add to `settings.gradle` (top most!) with required commit hash as version:
+* Add to `settings.gradle` (top most!) (exact commit hash might be used as version):
 
   ```groovy
   pluginManagement {
       resolutionStrategy {
           eachPlugin {
-              if (requested.id.namespace == 'ru.vyarus.pom') {
-                  useModule('ru.vyarus:gradle-pom-plugin:b5a8aee24f')
+              if (requested.id.id == 'ru.vyarus.pom') {
+                  useModule('ru.vyarus:gradle-pom-plugin:master-SNAPSHOT')
               }
           }
       }
-      repositories {
-          maven { url 'https://jitpack.io' }
-          gradlePluginPortal()          
+      repositories {                        
+          gradlePluginPortal()
+          maven { url 'https://jitpack.io' }                    
       }
   }    
   ``` 
