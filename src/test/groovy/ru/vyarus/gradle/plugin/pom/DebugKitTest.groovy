@@ -146,15 +146,15 @@ POM> Apply default description for maven publication
 POM> --------------------------------- Applied direct XML changes for maven publication
 \t  16 |       <artifactId>javassist</artifactId>
 \t  17 |       <version>3.16.1-GA</version>
-\t  18 |       -<scope>runtime<-+<scope>compile<+/scope>
+\t  18 |       <scope>-runtime-+compile+</scope>
 \t
 \t  22 |       <artifactId>annotations</artifactId>
 \t  23 |       <version>3.0.0</version>
-\t  24 |       -<scope>runtime<-+<scope>provided<+/scope>
+\t  24 |       <scope>-runtime-+provided+</scope>
 \t
 \t  28 |       <artifactId>generics-resolver</artifactId>
 \t  29 |       <version>2.0.0</version>
-\t  30 |       -<scope>runtime<-+<scope>compile<+/scope>
+\t  30 |       <scope>-runtime-+compile+</scope>
 \t  31 | +      <optional>true</optional>+
 \t
 \t  38 |     </dependency>

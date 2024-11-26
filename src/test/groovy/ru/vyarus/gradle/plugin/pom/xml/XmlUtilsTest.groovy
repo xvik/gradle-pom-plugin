@@ -31,8 +31,8 @@ class XmlUtilsTest extends Specification {
     <other>vv</other>
 </root>
 """).replaceAll("\u001B\\[[;\\d]*m", "")  == """   0 | <root>
-   1 |     -<old>dd<-+<some>value2<+/-old>-+some>+
-   2 |     -<some>value<-+<other>vv<+/-some>-+other>+
+   1 |     <-old-+some+>-dd-+value2+</-old-+some+>
+   2 |     <-some-+other+>-value-+vv+</-some-+other+>
 """
     }
 
@@ -48,8 +48,8 @@ class XmlUtilsTest extends Specification {
     <other>vv</other>
 </root>
 """, '\t').replaceAll("\u001B\\[[;\\d]*m", "")  == """\t   0 | <root>
-\t   1 |     -<old>dd<-+<some>value2<+/-old>-+some>+
-\t   2 |     -<some>value<-+<other>vv<+/-some>-+other>+"""
+\t   1 |     <-old-+some+>-dd-+value2+</-old-+some+>
+\t   2 |     <-some-+other+>-value-+vv+</-some-+other+>"""
     }
 
     private Node node(String xml) {

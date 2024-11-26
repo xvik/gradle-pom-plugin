@@ -24,7 +24,7 @@ wrapper {
 
 repositories { mavenLocal(); mavenCentral(); gradlePluginPortal() }
 dependencies {
-    implementation 'io.github.java-diff-utils:java-diff-utils:4.12'
+    implementation 'io.github.java-diff-utils:java-diff-utils:4.15'
 
     testImplementation('org.spockframework:spock-core:2.3-groovy-3.0') {
         exclude group: 'org.codehaus.groovy'
